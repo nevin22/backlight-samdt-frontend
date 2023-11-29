@@ -1,0 +1,69 @@
+.tooltip {
+    position: absolute;
+    color: #fff;
+    padding: 10px;
+    background: rgba(0,0,0,0.8);
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.samdt_img {
+    border-radius: 5px;
+    max-width: 100%;
+    height: auto;
+}
+
+.search-container {
+    position: relative;
+    display: inline-block;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+}
+  
+.search-input {
+    border: 0px;
+    width: 300px;
+    outline: none;
+}
+
+.hoho {
+    position: absolute;
+    top: 135px;
+    right: 86px;
+    height: 5px;
+}
+
+.hehe {
+    position: absolute;
+    top: 135px;
+    right: 95px;
+    height: 5px;
+}
+.click_icon {
+    cursor: pointer;
+    border: 4px solid white;
+}
+
+.glowing {
+    border: 4px solid #4E95F5;
+    box-shadow: 0 0 7px #4E95F5;
+}
+  
+/* Hide the scrollbar for WebKit browsers */
+.table-container::-webkit-scrollbar {
+display: none;
+}
+
+.edit-table-container {
+    max-height: 78vh; 
+    overflow-y: auto;
+  }
+  
+/* Hide the scrollbar for WebKit browsers */
+.edit-table-container::-webkit-scrollbar {
+    display: none;
+}
