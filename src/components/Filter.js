@@ -7,10 +7,12 @@ import Search from '@mui/icons-material/Search';
 import Pagination from '@mui/material/Pagination';
 import Button from '@mui/material/Button';
 import moment from "moment";
+import Checkbox from '@mui/material/Checkbox';
 import '../index.css';
 
 export default function BasicTextFields(props) {
   const [dateValue, onChange] = useState(moment().subtract(1, 'days').startOf('day').toDate());
+  const [onlyShowValidated, setOnlyShowValidated] = useState(false);
   const [isCalendarOpen, setIsCalenderOpen] = useState(false)
   let debounce_timer = null;
 
@@ -22,11 +24,23 @@ export default function BasicTextFields(props) {
     }, 300);
   };
 
+  const toggleValidatedFilter = () => {
+    props.showOnlyValidated(!onlyShowValidated)
+    setOnlyShowValidated(!onlyShowValidated);
+    
+  }
+
   return (
     <div className="sticky">
-      <div style={{ fontWeight: 'bold', fontFamily: "Nunito", marginBottom: 20, fontSize: 18 }}>
+      <div style={{ fontWeight: 'bold', fontFamily: "Nunito", fontSize: 18 }}>
         Backlight
         <span style={{ fontWeight: 'normal', fontSize: 14, marginLeft: 5 }}>{props.origignalResultsCount} total result{props.origignalResultsCount > 1 ? 's' : ''}</span>
+
+        <div>
+          <Checkbox size="small" checked={onlyShowValidated} onChange={() => toggleValidatedFilter() } style={{ marginLeft: -10 }}/>
+          <span style={{ fontSize: 12, fontFamily: 'Nunito'}}>Only show validated</span>
+        </div>
+
       </div>
 
       <div style={{ display: 'flex', fontWeight: 'bold', fontFamily: "Nunito", alignItems: 'center', justifyContent: 'space-between' }}>

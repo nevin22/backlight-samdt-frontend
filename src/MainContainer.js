@@ -117,6 +117,17 @@ function App(props) {
     }
   }
 
+  let showOnlyValidated = (trigger) => {
+    if (trigger) {
+      setIsListFiltered(true)
+      setFiltered_d(d.filter(data => data.DATA[data.DATA.findIndex(item => (item && item.SCENE_NAME) === "Scene Pull Up Window")].IS_VALIDATED));
+      setPaginated_d(d.filter(data => data.DATA[data.DATA.findIndex(item => (item && item.SCENE_NAME) === "Scene Pull Up Window")].IS_VALIDATED).slice(0, rowsPerPage));
+    } else {
+      setIsListFiltered(false)
+      setPaginated_d(d.slice(0, rowsPerPage));
+    }
+  }
+  
   let updateEditedItem = (data) => {
     let puw = data.find(d => d.SCENE_NAME === 'Scene Pull Up Window')
     set_d((d) => {
@@ -167,6 +178,7 @@ function App(props) {
             searchFilter={(text) => searchFilter(text)}
             setSelectedDate={(data) => setSelectedDate(data)}
             hasFilter={isListFiltered}
+            showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
             syncToManifest={() => setOpenAlert(true)}
             hasData={d.length > 0}
           />

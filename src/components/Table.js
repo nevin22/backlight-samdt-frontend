@@ -125,7 +125,6 @@ const TableRowz = (props) => {
   let orderpoint = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Order Point Outside Lane');
   let entrance = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Entrance Outside Lane');
 
-
   return (
     <React.Fragment key={props.row.JOURNEY_ID}>
       <TableRow
@@ -137,8 +136,16 @@ const TableRowz = (props) => {
           style={{ fontFamily: "Nunito", fontSize: 18, fontWeight: "bold", borderBottom: 0, paddingBottom: 0 }}
           align="left"
         >
-          <span style={{ cursor: puw.FOR_PUBLISH ? '' : 'pointer', userSelect: puw.FOR_PUBLISH ? 'none' : '', display: 'flex', alignItems: 'center' }} onClick={() => !puw.FOR_PUBLISH && props.openEditModal(props.row)}>
-            Session {props.row.JOURNEY_ID}
+          <span style={{ cursor: puw.FOR_PUBLISH ? '' : 'pointer', userSelect: puw.FOR_PUBLISH ? 'none' : '', display: 'flex', alignItems: 'center' }}
+            onClick={() => {
+              if (props.row.DATA.length < 4) {
+                alert('Selected journey is incomplete');
+              } else {
+                return !puw.FOR_PUBLISH && props.openEditModal(props.row)
+              }
+            }}
+          >
+            {props.index + 1} Session {props.row.JOURNEY_ID}
             {puw.IS_VALIDATED &&
               <>
                 <BeenhereIcon style={{ color: '#1976D2', height: 15, paddingLeft: 15 }} />
@@ -172,7 +179,7 @@ const TableRowz = (props) => {
           />
           {puw &&
             <div style={{ float: 'right', fontSize: 12 }}>
-              <span style={{ marginRight: 10 }}>(UTC) {moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
+              <span style={{ marginRight: 10 }}>{moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
               <span>IN: {moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
               <span style={{ marginLeft: 5 }}>OUT: {moment(puw.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
             </div>
@@ -187,13 +194,14 @@ const TableRowz = (props) => {
           <img
             alt="ylane_image"
             className="samdt_img"
-            src={(puw.IS_VALIDATED ? ylane.VALIDATED_IMAGE_URL : ylane.IMAGE_URL) || default_image}
+            src={(puw.IS_VALIDATED ? ylane.VALIDATED_IMAGE_URL : (ylane && ylane.IMAGE_URL || default_image)) || default_image}
           />
           {ylane &&
             <div style={{ float: 'right', fontSize: 12 }}>
               <span>IN: {moment(puw.IS_VALIDATED ? ylane.VALIDATED_ENTER_TIMESTAMP : ylane.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
               <span style={{ marginLeft: 5 }}>OUT: {moment(puw.IS_VALIDATED ? ylane.VALIDATED_EXIT_TIMESTAMP : ylane.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
             </div>
+
           }
         </StyledTableCell>
 
@@ -201,7 +209,7 @@ const TableRowz = (props) => {
           <img
             alt="ylane_image"
             className="samdt_img"
-            src={(puw.IS_VALIDATED ? orderpoint.VALIDATED_IMAGE_URL : orderpoint.IMAGE_URL) || default_image}
+            src={(puw.IS_VALIDATED ? orderpoint.VALIDATED_IMAGE_URL : (orderpoint && orderpoint.IMAGE_URL || default_image)) || default_image}
           />
           {orderpoint &&
             <div style={{ float: 'right', fontSize: 12 }}>
@@ -215,7 +223,7 @@ const TableRowz = (props) => {
           <img
             alt="ylane_image"
             className="samdt_img"
-            src={(puw.IS_VALIDATED ? entrance.VALIDATED_IMAGE_URL : entrance.IMAGE_URL) || default_image}
+            src={(puw.IS_VALIDATED ? entrance.VALIDATED_IMAGE_URL : (entrance && entrance.IMAGE_URL || default_image)) || default_image}
           />
           {entrance &&
             <div style={{ float: 'right', fontSize: 12 }}>
@@ -295,9 +303,10 @@ const formatEditData = (d, selectedData) => {
   //   }
   // }
 
+
   const sortViaEnterTimestampOfPuw = (a, b) => {
-    const timestampA = new Date(a[0].ENTER_TIMESTAMP).getTime();
-    const timestampB = new Date(b[0].ENTER_TIMESTAMP).getTime();
+    const timestampA = a[0] && a[0].ENTER_TIMESTAMP ? new Date(a[0].ENTER_TIMESTAMP).getTime() : 0;
+    const timestampB = b[0] && b[0].ENTER_TIMESTAMP ? new Date(b[0].ENTER_TIMESTAMP).getTime() : 0;
     return timestampB - timestampA;
   };
 

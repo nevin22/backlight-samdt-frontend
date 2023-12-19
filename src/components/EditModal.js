@@ -29,13 +29,13 @@ export default function ScrollDialog(props) {
     
     const [openImagePreview, setOpenImagePreview] = React.useState(false);
     const elementRef = useRef(null);
-    let puw = props?.selectedEditData?.DATA.find(data => data.SCENE_NAME === 'Scene Pull Up Window');
-    let ylane = props?.selectedEditData?.DATA.find(data => data.SCENE_NAME === 'Scene Y Lane Merge');
-    let orderpoint = props?.selectedEditData?.DATA.find(data => data.SCENE_NAME === 'Scene Order Point Outside Lane');
-    let entrance = props?.selectedEditData?.DATA.find(data => data.SCENE_NAME === 'Scene Entrance Outside Lane');
+    let puw = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Pull Up Window');
+    let ylane = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Y Lane Merge');
+    let orderpoint = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Order Point Outside Lane');
+    let entrance = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Entrance Outside Lane');
     let tableItems = [...props.editData];
 
-    let aboveSelectedTimestamp = tableItems.filter((d => d.find(s => s.SCENE_NAME === 'Scene Pull Up Window').ENTER_TIMESTAMP > puw.ENTER_TIMESTAMP));
+    let aboveSelectedTimestamp = tableItems.filter((d => d.find(s => s && s.SCENE_NAME === 'Scene Pull Up Window').ENTER_TIMESTAMP > puw.ENTER_TIMESTAMP));
     let insertPoint = aboveSelectedTimestamp && aboveSelectedTimestamp.length || 0;
 
     // for editing valited session :(
@@ -189,11 +189,32 @@ export default function ScrollDialog(props) {
                                             let ylane_image = '';
                                             let orderpoint_image = '';
                                             let entrance_image = '';
+                                            
+                                            let ylane_enter_timestamp = '';
+                                            let ylane_exit_timestamp = '';
+                                            let puw_enter_timestamp = '';
+                                            let puw_exit_timestamp = '';
+                                            let orderpoint_enter_timestamp = '';
+                                            let orderpoint_exit_timestamp = '';
+                                            let entrance_enter_timestamp = '';
+                                            let entrance_exit_timestamp = '';
+
                                             if (_puw) { // show validated image url if it is the selected session and it has validate image url
-                                                puw_image = (_puw && _puw.defaultSelected ? (_puw.VALIDATED_IMAGE_URL || _puw.IMAGE_URL) : _puw.IMAGE_URL) || default_image;
-                                                ylane_image = (_ylane && _ylane.defaultSelected ? (_ylane.VALIDATED_IMAGE_URL || _ylane.IMAGE_URL) : _ylane.IMAGE_URL) || default_image;
-                                                orderpoint_image = (_orderpoint && _orderpoint.defaultSelected ? (_orderpoint.VALIDATED_IMAGE_URL || _orderpoint.IMAGE_URL) : _orderpoint.IMAGE_URL) || default_image;
-                                                entrance_image = (_entrance && _entrance.defaultSelected ? (_entrance.VALIDATED_IMAGE_URL|| _entrance.IMAGE_URL) : _entrance.IMAGE_URL) || default_image;
+                                                puw_image = _puw ? (_puw.defaultSelected ? (_puw.VALIDATED_IMAGE_URL || _puw.IMAGE_URL) : _puw.IMAGE_URL) : default_image;
+                                                puw_enter_timestamp = _puw && (_puw.defaultSelected ? (_puw.VALIDATED_ENTER_TIMESTAMP || _puw.ENTER_TIMESTAMP) : _puw.ENTER_TIMESTAMP);
+                                                puw_exit_timestamp = _puw && (_puw.defaultSelected ? (_puw.VALIDATED_EXIT_TIMESTAMP || _puw.EXIT_TIMESTAMP) : _puw.EXIT_TIMESTAMP);
+
+                                                ylane_image = _ylane ? (_ylane.defaultSelected ? (_ylane.VALIDATED_IMAGE_URL || _ylane.IMAGE_URL) : _ylane.IMAGE_URL) : default_image;
+                                                ylane_enter_timestamp = _ylane && (_ylane.defaultSelected ? (_ylane.VALIDATED_ENTER_TIMESTAMP || _ylane.ENTER_TIMESTAMP) : _ylane.ENTER_TIMESTAMP);
+                                                ylane_exit_timestamp = _ylane && (_ylane.defaultSelected ? (_ylane.VALIDATED_EXIT_TIMESTAMP || _ylane.EXIT_TIMESTAMP) : _ylane.EXIT_TIMESTAMP);
+                                                
+                                                orderpoint_image = _orderpoint ? (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_IMAGE_URL || _orderpoint.IMAGE_URL) : _orderpoint.IMAGE_URL) : default_image;
+                                                orderpoint_enter_timestamp = _orderpoint && (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_ENTER_TIMESTAMP || _orderpoint.ENTER_TIMESTAMP) : _orderpoint.ENTER_TIMESTAMP);
+                                                orderpoint_exit_timestamp = _orderpoint && (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_EXIT_TIMESTAMP || _orderpoint.EXIT_TIMESTAMP) : _orderpoint.EXIT_TIMESTAMP);
+                                                
+                                                entrance_image = _entrance ? (_entrance.defaultSelected ? (_entrance.VALIDATED_IMAGE_URL|| _entrance.IMAGE_URL) : _entrance.IMAGE_URL) : default_image;
+                                                entrance_enter_timestamp = _entrance && (_entrance.defaultSelected ? (_entrance.VALIDATED_ENTER_TIMESTAMP || _entrance.ENTER_TIMESTAMP) : _entrance.ENTER_TIMESTAMP);
+                                                entrance_exit_timestamp = _entrance && (_entrance.defaultSelected ? (_entrance.VALIDATED_EXIT_TIMESTAMP || _entrance.EXIT_TIMESTAMP) : _entrance.EXIT_TIMESTAMP);
                                             }
                                             return (
                                                 // <TableItem
@@ -227,7 +248,7 @@ export default function ScrollDialog(props) {
                                                                             <VisibilityIcon
                                                                                 onClick={() => {
                                                                                     setOpenImagePreview(true);
-                                                                                    setPreviewImage(_puw.IMAGE_URL)
+                                                                                    setPreviewImage(puw_image)
                                                                                 }}
                                                                                 style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                             />
@@ -260,20 +281,18 @@ export default function ScrollDialog(props) {
                                                                             <VisibilityIcon
                                                                                 onClick={() => {
                                                                                     setOpenImagePreview(true);
-                                                                                    setPreviewImage(_ylane.IMAGE_URL)
+                                                                                    setPreviewImage(ylane_image)
                                                                                 }}
                                                                                 style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                             />
                                                                         }
                                                                     </div>
 
-
                                                                     <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(_ylane.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(_ylane.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
+                                                                        <span>IN: {moment(ylane_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(ylane_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
                                                                     </div>
                                                                 </>
-
                                                             }
 
                                                         </TableCell>
@@ -292,7 +311,7 @@ export default function ScrollDialog(props) {
                                                                             <VisibilityIcon
                                                                                 onClick={() => {
                                                                                     setOpenImagePreview(true);
-                                                                                    setPreviewImage(_orderpoint.IMAGE_URL)
+                                                                                    setPreviewImage(orderpoint_image)
                                                                                 }}
                                                                                 style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                             />
@@ -300,8 +319,8 @@ export default function ScrollDialog(props) {
                                                                     </div>
 
                                                                     <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(_orderpoint.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(_orderpoint.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
+                                                                        <span>IN: {moment(orderpoint_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(orderpoint_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
                                                                     </div>
                                                                 </>
 
@@ -322,15 +341,15 @@ export default function ScrollDialog(props) {
                                                                             <VisibilityIcon
                                                                                 onClick={() => {
                                                                                     setOpenImagePreview(true);
-                                                                                    setPreviewImage(_entrance.IMAGE_URL)
+                                                                                    setPreviewImage(entrance_image)
                                                                                 }}
                                                                                 style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                             />
                                                                         }
                                                                     </div>
                                                                     <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(_entrance.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(_entrance.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
+                                                                        <span>IN: {moment(entrance_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(entrance_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
                                                                     </div>
                                                                 </>
 
