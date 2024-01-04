@@ -15,6 +15,7 @@ import EditModal from './EditModal';
 import moment from 'moment';
 import axios from "axios";
 import './table.css'
+import AlertDialog from "./AlertDialog";
 
 export default function BasicTable(props) {
   let [detections, setDetections] = useState(props.detectionz);
@@ -23,6 +24,8 @@ export default function BasicTable(props) {
   let [fetchingEditData, setFetchingEditData] = useState(false);
   let [isValidating, setIsValidating] = useState(false);
   let [editData, setEditData] = useState([]);
+  let [openAlert, setOpenAlert] = useState(false);
+  let [idToInvalidate, setIdToInvalidate] = useState('');
 
   let openEditModal = (data) => {
     setOpenEditModal(true);
@@ -32,11 +35,12 @@ export default function BasicTable(props) {
       .get(`http://localhost:8080/detections/samdt_edit_list`, {
         params: {
           journey_id: data.JOURNEY_ID,
-          data: data.DATA
+          data: data.DATA,
+          tableColumns: props.tableColumns
         }
       }).then((res) => {
         setFetchingEditData(false);
-        setEditData(formatEditData(res, data))
+        setEditData(formatEditData(res, data, props.tableColumns))
       })
       .catch((err) => {
         console.log("err", err);
@@ -48,14 +52,14 @@ export default function BasicTable(props) {
     setOpenEditModal(false);
   }
 
-  let validate_data = (ids, isValidated = false) => {
+  let validate_data = (ids) => {
     setIsValidating(true);
     axios
       .post(`http://localhost:8080/detections/validate_data`, {
         body: {
           selected_data: selectedEditData,
           small_circle_ids: ids,
-          isValidated: selectedEditData.DATA[0].IS_VALIDATED
+          isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED)
         }
       }).then((res) => {
         props.updateEditedItem(res.data.updatedData)
@@ -76,7 +80,33 @@ export default function BasicTable(props) {
 
   return (
     <Paper sx={{ width: '100%', overflowY: 'auto' }}>
+      <AlertDialog
+        closeAlert={() => setOpenAlert(false)}
+        openAlert={openAlert}
+        contentText={'Are you certain you wish to invalidate this session ?'}
+        onProceed={() => {
+          axios
+          .post(`http://localhost:8080/detections/invalidate_data`, {
+            body: {
+              journey_id: idToInvalidate,
+            }
+          }).then((res) => {
+            setOpenAlert(false)
+            setIdToInvalidate('');
+            setTimeout(() => {
+              window.location.reload();
+            }, 300)
+          })
+          .catch((err) => {
+            console.log('errr', err);
+            setOpenAlert(false)
+            setIdToInvalidate('');
+          });
+        }}
+        title={"Invalidate Session ?"}
+      />
       <EditModal
+        tableColumns={props.tableColumns}
         openEditModal={isOpenEditModal}
         selectedEditData={selectedEditData}
         editData={editData}
@@ -91,11 +121,16 @@ export default function BasicTable(props) {
             {detections.map((row, index) => {
               return (
                 <TableRowz
+                  tableColumns={props.tableColumns}
                   env={props.env}
                   keyy={`${row.delta_id}`}
                   row={row}
                   index={index}
                   openEditModal={(data) => openEditModal(data)}
+                  setIdToInvalidate={(id) => {
+                    setIdToInvalidate(id);
+                    setOpenAlert(true)
+                  }}
                 />
               );
             })}
@@ -107,53 +142,83 @@ export default function BasicTable(props) {
 }
 
 const TableRowz = (props) => {
-  const sceneOrder = {
-    "Scene Pull Up Window": 1,
-    "Scene Y Lane Merge": 2,
-    "Scene Order Point Outside Lane": 3,
-    "Scene Entrance Outside Lane": 4,
-  };
+  let rowItems = props.row.DATA;
+  let columnLength = props.tableColumns.length;
 
-  const data = props.row.DATA.sort((a, b) => {
-    const sceneA = sceneOrder[a.SCENE_NAME];
-    const sceneB = sceneOrder[b.SCENE_NAME];
-    return sceneA - sceneB;
-  });
+  let forPublish = rowItems.find(d => d.IS_FOR_PUBLISH_FULL_JOURNEY);
+  let isValidated = rowItems.find(d => d.IS_VALIDATED_FULL_JOURNEY);
 
-  let puw = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Pull Up Window');
-  let ylane = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Y Lane Merge');
-  let orderpoint = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Order Point Outside Lane');
-  let entrance = props.row.DATA.find(data => data.SCENE_NAME === 'Scene Entrance Outside Lane');
+  let rowComponents = [];
+  for (let i = 0; i <= columnLength - 1; i++) {
+    let item = rowItems.find(d => parseInt(d.ORDER_INDEX) === (columnLength - 1) - i);
+    if (item && !item.NO_DATA) {
+      let image = item.VALIDATED_IMAGE_URL ? item.VALIDATED_IMAGE_URL : (item.IMAGE_URL || default_image);
+      rowComponents.push(
+        <StyledTableCell
+          style={{ fontFamily: "Nunito", fontWeight: "bold" }}
+          align="left"
+          width={`${100 / columnLength}%`}
+        >
+          <img
+            alt="samdt_image"
+            className="samdt_img"
+            src={image}
+          />
+          <div style={{ float: 'right', fontSize: 12 }}>
+            <span style={{ marginRight: 10 }}>{moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
+            <span>IN: {moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+            <span style={{ marginLeft: 5 }}>OUT: {moment((item.VALIDATED_EXIT_TIMESTAMP || item.EXIT_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
+          </div>
+        </StyledTableCell>
+      )
+    } else {
+      rowComponents.push(
+        <StyledTableCell
+          style={{ fontFamily: "Nunito", fontWeight: "bold" }}
+          align='center'
+          width={`${100 / columnLength}%`}
+        >
+          No Data
+        </StyledTableCell>
+      )
+    }
+  }
 
   return (
     <React.Fragment key={props.row.JOURNEY_ID}>
-      <TableRow
+      <TableRow key={props.row.JOURNEY_ID}
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ backgroundColor: puw.IS_VALIDATED ? '#81bffc' : '' }}
+        style={{ backgroundColor: isValidated ? '#81bffc' : '' }}
       >
         <TableCell
           colSpan={4}
           style={{ fontFamily: "Nunito", fontSize: 18, fontWeight: "bold", borderBottom: 0, paddingBottom: 0 }}
           align="left"
         >
-          <span style={{ cursor: puw.FOR_PUBLISH ? '' : 'pointer', userSelect: puw.FOR_PUBLISH ? 'none' : '', display: 'flex', alignItems: 'center' }}
-            onClick={() => {
-              if (props.row.DATA.length < 4) {
-                alert('Selected journey is incomplete');
-              } else {
-                return !puw.FOR_PUBLISH && props.openEditModal(props.row)
-              }
-            }}
-          >
-            {props.index + 1} Session {props.row.JOURNEY_ID}
-            {puw.IS_VALIDATED &&
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            <span
+              style={{ cursor: forPublish ? '' : 'pointer', userSelect: forPublish ? 'none' : '' }}
+              onClick={() => {
+                return !forPublish && props.openEditModal({
+                  ...props.row,
+                  DATA: props.row.DATA.filter(d => !d.NO_DATA)
+                })
+              }}>
+              {props.index + 1} Session {props.row.JOURNEY_ID}
+            </span>
+            {isValidated &&
               <>
                 <BeenhereIcon style={{ color: '#1976D2', height: 15, paddingLeft: 15 }} />
-                <span style={{ fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}>VALIDATED</span>
+                <span
+                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
+                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
+                >
+                  VALIDATED
+                </span>
               </>
             }
 
-            {puw.FOR_PUBLISH &&
+            {forPublish &&
               <>
                 <BeenhereIcon style={{ color: 'white', height: 15, paddingLeft: 15 }} />
                 <span style={{ fontFamily: 'Nunito', color: 'white', fontSize: 14 }}>FOR PUBLISH</span>
@@ -165,9 +230,10 @@ const TableRowz = (props) => {
 
       <StyledTableRow
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ borderTop: 0, backgroundColor: puw.IS_VALIDATED ? '#81bffc' : '' }}
+        style={{ borderTop: 0, backgroundColor: isValidated ? '#81bffc' : '' }}
       >
-        <StyledTableCell
+        {rowComponents}
+        {/* <StyledTableCell
           style={{ fontFamily: "Nunito", fontWeight: "bold" }}
           align="left"
           width={'25%'}
@@ -231,78 +297,55 @@ const TableRowz = (props) => {
               <span style={{ marginLeft: 5 }}>OUT: {moment(puw.IS_VALIDATED ? entrance.VALIDATED_EXIT_TIMESTAMP : entrance.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
             </div>
           }
-        </StyledTableCell>
+        </StyledTableCell> */}
       </StyledTableRow>
     </React.Fragment>
   );
 };
 
-const formatEditData = (d, selectedData) => {
+const formatEditData = (d, selectedData, tableColumns) => {
   let data = d.data.rows;
   let selectedDataArray = selectedData.DATA;
+  let editItemPerFov = tableColumns.map((column, index) => {
+    return ({
+      aboveSelectedTime: data[`${column.sceneName}`]?.filter(d => {
+        let selectedData = selectedDataArray.find(i => i.SCENE_NAME === column.sceneName) || selectedDataArray[0];
+        return d?.ENTER_TIMESTAMP > (selectedData?.ENTER_TIMESTAMP || selectedData?.VALIDATED_ENTER_TIMESTAMP)
+      }),
+      belowSelectedTime: data[`${column.sceneName}`]?.filter(d => {
+        let selectedData = selectedDataArray.find(i => i.SCENE_NAME === column.sceneName) || selectedDataArray[0];
+        return d?.ENTER_TIMESTAMP < (selectedData?.ENTER_TIMESTAMP || selectedData?.VALIDATED_ENTER_TIMESTAMP)
+      }),
+    })
+  })
 
-  let entrance = {
-    aboveSelectedTime: data['Scene Entrance Outside Lane'].filter(d => d.ENTER_TIMESTAMP > selectedDataArray.find(i => i.SCENE_NAME === 'Scene Entrance Outside Lane').ENTER_TIMESTAMP),
-    belowSelectedTime: data['Scene Entrance Outside Lane'].filter(d => d.ENTER_TIMESTAMP < selectedDataArray.find(i => i.SCENE_NAME === 'Scene Entrance Outside Lane').ENTER_TIMESTAMP)
-  };
-  let puw = {
-    aboveSelectedTime: data['Scene Pull Up Window'].filter(d => d.ENTER_TIMESTAMP > selectedDataArray.find(i => i.SCENE_NAME === 'Scene Pull Up Window').ENTER_TIMESTAMP),
-    belowSelectedTime: data['Scene Pull Up Window'].filter(d => d.ENTER_TIMESTAMP < selectedDataArray.find(i => i.SCENE_NAME === 'Scene Pull Up Window').ENTER_TIMESTAMP)
-  };
-  let orderPoint = {
-    aboveSelectedTime: data['Scene Order Point Outside Lane'].filter(d => d.ENTER_TIMESTAMP > selectedDataArray.find(i => i.SCENE_NAME === 'Scene Order Point Outside Lane').ENTER_TIMESTAMP),
-    belowSelectedTime: data['Scene Order Point Outside Lane'].filter(d => d.ENTER_TIMESTAMP < selectedDataArray.find(i => i.SCENE_NAME === 'Scene Order Point Outside Lane').ENTER_TIMESTAMP)
-  };
-  let ylaneData = {
-    aboveSelectedTime: data['Scene Y Lane Merge'].filter(d => d.ENTER_TIMESTAMP > selectedDataArray.find(i => i.SCENE_NAME === 'Scene Y Lane Merge').ENTER_TIMESTAMP),
-    belowSelectedTime: data['Scene Y Lane Merge'].filter(d => d.ENTER_TIMESTAMP < selectedDataArray.find(i => i.SCENE_NAME === 'Scene Y Lane Merge').ENTER_TIMESTAMP)
-  };
-
-  let maxAboveTimeLength = [entrance.aboveSelectedTime.length, puw.aboveSelectedTime.length, orderPoint.aboveSelectedTime.length, ylaneData.aboveSelectedTime.length];
-  let maxBelowTimeLength = [entrance.belowSelectedTime.length, puw.belowSelectedTime.length, orderPoint.belowSelectedTime.length, ylaneData.belowSelectedTime.length];
+  console.log('editItemPerFov', editItemPerFov)
+  let maxAboveTimeLength = Math.max(...editItemPerFov.map(d => d.aboveSelectedTime?.length).filter(value => value !== undefined));
+  let maxBelowTimeLength = Math.max(...editItemPerFov.map(d => d.belowSelectedTime?.length).filter(value => value !== undefined));
 
   let tableData = [];
 
-  if (Math.max(...maxAboveTimeLength)) {
-    for (let x = 0; x <= Math.max(...maxAboveTimeLength) - 1; x++) {
-      tableData.push([
-        entrance.aboveSelectedTime[x] || null,
-        puw.aboveSelectedTime[x] || null,
-        orderPoint.aboveSelectedTime[x] || null,
-        ylaneData.aboveSelectedTime[x] || null
-      ])
+  if (maxAboveTimeLength) {
+    for (let x = 0; x <= maxAboveTimeLength - 1; x++) {
+      tableData.push(tableColumns.map((d, index) => {
+        let povItems = editItemPerFov.find(d2 => (d2.aboveSelectedTime && d2.aboveSelectedTime[x] && d2.aboveSelectedTime[x].SCENE_NAME) === d.sceneName);
+        return { [`${d.sceneName}`]: povItems && povItems.aboveSelectedTime[x] }
+      }))
     }
   }
 
-  if (Math.max(...maxBelowTimeLength)) {
-    for (let x = 0; x <= Math.max(...maxBelowTimeLength) - 1; x++) {
-      tableData.push([
-        entrance.belowSelectedTime[x] || null,
-        puw.belowSelectedTime[x] || null,
-        orderPoint.belowSelectedTime[x] || null,
-        ylaneData.belowSelectedTime[x] || null
-      ])
+  if (maxBelowTimeLength) {
+    for (let x = 0; x <= maxBelowTimeLength - 1; x++) {
+      tableData.push(tableColumns.map((d, index) => {
+        let povItems = editItemPerFov.find(d2 => (d2.belowSelectedTime && d2.belowSelectedTime[x] && d2.belowSelectedTime[x].SCENE_NAME) === d.sceneName);
+        return { [`${d.sceneName}`]: povItems && povItems.belowSelectedTime[x] }
+      }))
     }
   }
 
-  // for (let x = 1; x <= 15; x++) {
-  //   if (x <= 5) {
-  //     tableData.push([
-  //       entrance.aboveSelectedTime[x - 1],
-  //       puw.aboveSelectedTime[x - 1],
-  //       orderPoint.aboveSelectedTime[x - 1],
-  //       ylaneData.aboveSelectedTime[x - 1]
-  //     ])
-  //   } else {
-  //     tableData.push([
-  //       entrance.belowSelectedTime[x - 6],
-  //       puw.belowSelectedTime[x - 6],
-  //       orderPoint.belowSelectedTime[x - 6],
-  //       ylaneData.belowSelectedTime[x - 6]
-  //     ])
-  //   }
-  // }
-
+  let transformedTable = tableData.map(d => {
+    return d.map((d2) => Object.values(d2)[0])
+  })
 
   const sortViaEnterTimestampOfPuw = (a, b) => {
     const timestampA = a[0] && a[0].ENTER_TIMESTAMP ? new Date(a[0].ENTER_TIMESTAMP).getTime() : 0;
@@ -310,7 +353,7 @@ const formatEditData = (d, selectedData) => {
     return timestampB - timestampA;
   };
 
-  return tableData.sort(sortViaEnterTimestampOfPuw)
+  return transformedTable.sort(sortViaEnterTimestampOfPuw)
 }
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({

@@ -9,6 +9,8 @@ import LoadingAnimation from '../src/assets/lottie/lf30_xhjuaccs.json';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import AlertDialog from "./components/AlertDialog";
 import Snackbar from "./components/SnackBar";
+import Button from '@mui/material/Button';
+import { CatchingPokemonSharp } from "@mui/icons-material";
 
 function App(props) {
   const [d, set_d] = useState([]);
@@ -29,6 +31,8 @@ function App(props) {
 
   const [selectedDate, setSelectedDate] = useState(null);
 
+  const [tableColumns, setTableColumns] = useState([]);
+
   const [env, setEnv] = useState({
     url: "http://localhost:8080",
   });
@@ -44,6 +48,7 @@ function App(props) {
         }
       })
       .then((res) => {
+        setTableColumns(setUpTableColumns(res.data.detections))
         set_d(res.data.detections);
         setPaginated_d(res.data.detections.slice(0, rowsPerPage));
         setFetching(false)
@@ -57,17 +62,19 @@ function App(props) {
   useEffect(() => {
   }, [page])
 
-  let fetchData = (date) => {
+  let fetchData = (date, filters) => {
     const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
     setFetching(true);
     axios
       .get(`${env.url}/detections/samdt_list`, {
         params: {
-          startTime: moment(date).startOf('day').format(desiredFormat),
-          endTime: moment(date).endOf('day').format(desiredFormat)
+          startTime: (date && moment(date).startOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
+          endTime: (date && moment(date).endOf('day').format(desiredFormat)) || moment().subtract('days').startOf('day').format(desiredFormat),
+          filters
         }
       })
       .then((res) => {
+        setTableColumns(setUpTableColumns(res.data.detections))
         set_d(res.data.detections);
         setPage(1);
         setPaginated_d(res.data.detections.slice(0, rowsPerPage));
@@ -127,95 +134,123 @@ function App(props) {
       setPaginated_d(d.slice(0, rowsPerPage));
     }
   }
-  
+
   let updateEditedItem = (data) => {
-    let puw = data.find(d => d.SCENE_NAME === 'Scene Pull Up Window')
+    let journey_item = data[tableColumns.length - 1];
     set_d((d) => {
       let d_copy = [...d];
-      // let dataToUpdate = d.find(item => item.JOURNEY_ID === puw.JOURNEY_ID);
-      let indexOfDataToUpdate = d.findIndex(item => item.JOURNEY_ID === puw.JOURNEY_ID);
+      let indexOfDataToUpdate = d.findIndex(item => item.JOURNEY_ID === journey_item.JOURNEY_ID);
       d_copy[indexOfDataToUpdate].DATA = data;
       return d_copy
     })
+  }
 
-    setTimeout(() => {
-      console.log('d', d)
-    }, 1000)
+  let setUpTableColumns = (data) => {
+    const sceneNamesByIndex = {};
+    data.forEach(journey => {
+      journey.DATA.forEach(entry => {
+        const index = parseInt(entry.ORDER_INDEX);
+        const sceneName = entry.SCENE_NAME;
+
+        if (!sceneNamesByIndex[index]) {
+          sceneNamesByIndex[index] = sceneName;
+        }
+      });
+    });
+
+    const result = Object.keys(sceneNamesByIndex).map(index => {
+      return { index: parseInt(index), sceneName: sceneNamesByIndex[index] };
+    });
+
+    return result.sort((a, b) => b.index - a.index);
   }
 
   return (
-    <div>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      />
+    <>
+      <Button
+        style={{ fontFamily: 'Nunito', position: 'fixed', bottom: 30, right: 30, zIndex: 100 }}
+        variant="contained"
+        size="small"
+        onClick={() => setOpenAlert(true)}
+      >
+        Sync to manifest
+      </Button>
+      <div style={{ position: 'relative' }}>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
 
-      <Snackbar
-        open={openSnackBar}
-        close={() => setOpenSnackBar(false)}
-        success={successSnackBar}
-      />
+        <Snackbar
+          open={openSnackBar}
+          close={() => setOpenSnackBar(false)}
+          success={successSnackBar}
+        />
 
-      <AlertDialog
-        closeAlert={() => setOpenAlert(false)}
-        openAlert={openAlert}
-        contentText={'Proceeding will finalize your validated sessions for syncing in the manifest. Are you certain you wish to continue?'}
-        onProceed={() => syncToManifest()}
-        title={"Sync to manifest ?"}
-      />
-      <div>
+        <AlertDialog
+          closeAlert={() => setOpenAlert(false)}
+          openAlert={openAlert}
+          contentText={'Proceeding will finalize your validated sessions for syncing in the manifest. Are you certain you wish to continue?'}
+          onProceed={() => syncToManifest()}
+          title={"Sync to manifest ?"}
+        />
         <div>
-          <Filter
-            fetching={fetching}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            origignalResultsCount={d.length}
-            pageCount={Math.ceil(isListFiltered ? (filtered_d.length / rowsPerPage) : (d.length / rowsPerPage))}
-            resultsCount={isListFiltered ? filtered_d.length : d.length}
-            updatePage={(page) => setPage(page)}
-            fetchData={(date) => fetchData(date)}
-            onPageChange={(page) => onPageChange(page)}
-            searchFilter={(text) => searchFilter(text)}
-            setSelectedDate={(data) => setSelectedDate(data)}
-            hasFilter={isListFiltered}
-            showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
-            syncToManifest={() => setOpenAlert(true)}
-            hasData={d.length > 0}
-          />
+          <div>
+            <Filter
+              tableColumns={tableColumns}
+              fetching={fetching}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              origignalResultsCount={d.length}
+              pageCount={Math.ceil(isListFiltered ? (filtered_d.length / rowsPerPage) : (d.length / rowsPerPage))}
+              resultsCount={isListFiltered ? filtered_d.length : d.length}
+              updatePage={(page) => setPage(page)}
+              fetchData={(date, filters) => fetchData(date, filters)}
+              onPageChange={(page) => onPageChange(page)}
+              searchFilter={(text) => searchFilter(text)}
+              setSelectedDate={(data) => setSelectedDate(data)}
+              selectedDate={selectedDate}
+              hasFilter={isListFiltered}
+              showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
+              hasData={d.length > 0}
+            />
 
-          {fetching &&
-            <div style={{ paddingTop: 250 }}>
-              <Player
-                autoplay
-                loop
-                src={LoadingAnimation}
-                style={{ height: '200px', width: '200px' }}
-              />
-            </div>
-          }
-          {!fetching && d.length === 0 &&
-            <div style={{ fontFamily: 'Nunito', fontSize: 25, display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 250 }}>
-              No Data <SearchOffIcon style={{ paddingLeft: 20, color: 'black', height: 50, width: 50 }} />
-            </div>
-          }
-          {!fetching && !!d.length &&
-            <div style={{ margin: 20, marginTop: 0 }}>
-              <Table
-                openSnackBar={(props) => {
-                  setOpenSnackBar(true);
-                  setSuccessSnackBar(props.success);
-                }}
-                fetching={fetching}
-                env={env}
-                detectionz={paginated_d}
-                updateEditedItem={(updateData) => updateEditedItem(updateData)}
-              />
-            </div>
-          }
+            {fetching &&
+              <div style={{ paddingTop: 250 }}>
+                <Player
+                  autoplay
+                  loop
+                  src={LoadingAnimation}
+                  style={{ height: '200px', width: '200px' }}
+                />
+              </div>
+            }
+            {!fetching && d.length === 0 &&
+              <div style={{ fontFamily: 'Nunito', fontSize: 25, display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 250 }}>
+                No Data <SearchOffIcon style={{ paddingLeft: 20, color: 'black', height: 50, width: 50 }} />
+              </div>
+            }
+            {!fetching && !!d.length &&
+              <div style={{ margin: 20, marginTop: 0 }}>
+                <Table
+                  tableColumns={tableColumns}
+                  openSnackBar={(props) => {
+                    setOpenSnackBar(true);
+                    setSuccessSnackBar(props.success);
+                  }}
+                  fetching={fetching}
+                  env={env}
+                  detectionz={paginated_d}
+                  updateEditedItem={(updateData) => updateEditedItem(updateData)}
+                />
+              </div>
+            }
+          </div>
+
         </div>
-
       </div>
-    </div>
+    </>
+
   );
 }
 

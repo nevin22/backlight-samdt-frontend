@@ -9,11 +9,20 @@ import Button from '@mui/material/Button';
 import moment from "moment";
 import Checkbox from '@mui/material/Checkbox';
 import '../index.css';
+import FilterOptions from './FilterOptions';
+import Drawer from '@mui/material/Drawer';
 
 export default function BasicTextFields(props) {
   const [dateValue, onChange] = useState(moment().subtract(1, 'days').startOf('day').toDate());
   const [onlyShowValidated, setOnlyShowValidated] = useState(false);
-  const [isCalendarOpen, setIsCalenderOpen] = useState(false)
+  const [isCalendarOpen, setIsCalenderOpen] = useState(false);
+  const [drawerIsOpen, setDrawerIsOpen] = useState(true);
+
+  const [selectedNetwork, setNetwork] = useState('');
+  const [selectedSite, setSite] = useState('');
+  const [optionNetworks, setOptionNetworks] = useState([]);
+  const [optionSites, setOptionSites] = useState([]);
+
   let debounce_timer = null;
 
   const handleSearch = (e) => {
@@ -27,18 +36,37 @@ export default function BasicTextFields(props) {
   const toggleValidatedFilter = () => {
     props.showOnlyValidated(!onlyShowValidated)
     setOnlyShowValidated(!onlyShowValidated);
-    
+
   }
 
   return (
     <div className="sticky">
+      <Drawer
+        anchor={'left'}
+        open={drawerIsOpen}
+        onClose={() => setDrawerIsOpen(false)}
+        >
+          <FilterOptions
+            closeDrawer={() => setDrawerIsOpen(false)}
+            setNetwork={(network) => setNetwork(network)}
+            setSite={(site) => setSite(site)}
+            selectedNetwork={selectedNetwork}
+            selectedSite={selectedSite}
+            optionNetworks={optionNetworks}
+            setOptionNetworks={(networks) => setOptionNetworks(networks)}
+            optionSites={optionSites}
+            setOptionSites={(sites) => setOptionSites(sites)}
+            fetchData={() => props.fetchData(props.selectedDate, { network: selectedNetwork, site: selectedSite })}
+          />
+      </Drawer>
+
       <div style={{ fontWeight: 'bold', fontFamily: "Nunito", fontSize: 18 }}>
         Backlight
         <span style={{ fontWeight: 'normal', fontSize: 14, marginLeft: 5 }}>{props.origignalResultsCount} total result{props.origignalResultsCount > 1 ? 's' : ''}</span>
 
         <div>
-          <Checkbox size="small" checked={onlyShowValidated} onChange={() => toggleValidatedFilter() } style={{ marginLeft: -10 }}/>
-          <span style={{ fontSize: 12, fontFamily: 'Nunito'}}>Only show validated</span>
+          <Checkbox size="small" checked={onlyShowValidated} onChange={() => toggleValidatedFilter()} style={{ marginLeft: -10 }} />
+          <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Only show validated</span>
         </div>
 
       </div>
@@ -68,9 +96,9 @@ export default function BasicTextFields(props) {
           style={{ fontFamily: 'Nunito', marginBottom: 10 }}
           variant="contained"
           size="small"
-          onClick={() => props.syncToManifest()}
+          onClick={() => setDrawerIsOpen(!drawerIsOpen)}
         >
-          Sync to Manifest
+          Filters
         </Button>
         {isCalendarOpen &&
           <DateTimePicker
@@ -81,7 +109,7 @@ export default function BasicTextFields(props) {
             disableClock
             onChange={(d) => {
               onChange(d);
-              props.fetchData(d);
+              props.fetchData(d, { network: selectedNetwork, site: selectedSite });
               setIsCalenderOpen(false);
               props.setSelectedDate(d);
             }}
@@ -106,18 +134,14 @@ export default function BasicTextFields(props) {
       {/* quickfix para sticky and table header haha */}
       {props.hasData &&
         <div className="sticky-table-header-hack">
-          <div className="sticky-table-header-cell">
-            PUW
-          </div>
-          <div className="sticky-table-header-cell">
-            YLANE
-          </div>
-          <div className="sticky-table-header-cell">
-            Order Point
-          </div>
-          <div className="sticky-table-header-cell">
-            Entrance
-          </div>
+          {props.tableColumns.map((column, index) => {
+            return (
+              <div key={index} className="sticky-table-header-cell" style={{ width: `${100/props.tableColumns.length}%`}}>
+                {column.sceneName}
+              </div>
+            )
+          })
+          }
         </div>
       }
     </div>

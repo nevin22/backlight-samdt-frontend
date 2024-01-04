@@ -14,7 +14,6 @@ import { Player } from "@lottiefiles/react-lottie-player";
 import LoadingAnimation from '../assets/lottie/lf30_xhjuaccs.json';
 import { useState, useEffect, useRef } from "react";
 import default_image from '../assets/no_image.jpg';
-import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -26,27 +25,25 @@ import moment from 'moment';
 export default function ScrollDialog(props) {
     const [scroll, setScroll] = React.useState('paper');
     const [previewImage, setPreviewImage] = React.useState(null);
-    
     const [openImagePreview, setOpenImagePreview] = React.useState(false);
     const elementRef = useRef(null);
-    let puw = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Pull Up Window');
-    let ylane = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Y Lane Merge');
-    let orderpoint = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Order Point Outside Lane');
-    let entrance = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === 'Scene Entrance Outside Lane');
-    let tableItems = [...props.editData];
-
-    let aboveSelectedTimestamp = tableItems.filter((d => d.find(s => s && s.SCENE_NAME === 'Scene Pull Up Window').ENTER_TIMESTAMP > puw.ENTER_TIMESTAMP));
-    let insertPoint = aboveSelectedTimestamp && aboveSelectedTimestamp.length || 0;
-
-    // for editing valited session :(
-    if (puw) {
-        puw.defaultSelected = true;
-        ylane.defaultSelected = true;
-        orderpoint.defaultSelected = true;
-        entrance.defaultSelected = true;
+    let setupSelected = {};
+    
+    for (let x = 0; x <= props.tableColumns.length - 1; x++) {
+        setupSelected[`${props.tableColumns[x].sceneName}`] = {
+            ...props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === props.tableColumns[x].sceneName),
+            defaultSelected: true
+        }
     }
 
-    tableItems.splice(insertPoint, 0, [puw, ylane, orderpoint, entrance])
+    let tableItems = [...props.editData];
+    let insertIndex = tableItems.map(d => d[0]).findIndex(data => {
+        return data?.ENTER_TIMESTAMP < Object.values(setupSelected)[0].ENTER_TIMESTAMP
+    })
+
+    let insertPoint = (tableItems.length / 2) || 0;
+
+    tableItems.splice(insertIndex, 0, Object.values(setupSelected))
 
     const scrollToElement = () => {
         // Scroll to the element
@@ -58,12 +55,12 @@ export default function ScrollDialog(props) {
     let [selectedItemIds, setSelectedItemIds] = useState(null);
 
     useEffect(() => {
-        setSelectedItemIds({
-            puw: puw?.SMALL_CIRCLE_ID,
-            ylane: ylane?.SMALL_CIRCLE_ID,
-            orderpoint: orderpoint?.SMALL_CIRCLE_ID,
-            entrance: entrance?.SMALL_CIRCLE_ID
-        })
+        let setupSelected = {};
+
+        for (let x = 0; x <= props.tableColumns.length - 1; x++) {
+            setupSelected[`${props.tableColumns[x].sceneName}`] = props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === props.tableColumns[x].sceneName)?.SMALL_CIRCLE_ID
+        }
+        setSelectedItemIds(setupSelected)
     }, [props.selectedEditData])
 
     useEffect(() => {
@@ -75,35 +72,12 @@ export default function ScrollDialog(props) {
     }, [props.fetchingEditData])
 
     const handleSelect = (id, pov) => {
-        switch (pov) {
-            case 'puw':
-                setSelectedItemIds((val) => ({
-                    ...val,
-                    puw: id
-                }))
-                break;
-            case 'ylane':
-                setSelectedItemIds((val) => ({
-                    ...val,
-                    ylane: id
-                }))
-                break;
-            case 'orderpoint':
-                setSelectedItemIds((val) => ({
-                    ...val,
-                    orderpoint: id
-                }))
-                break;
-            case 'entrance':
-                setSelectedItemIds((val) => ({
-                    ...val,
-                    entrance: id
-                }))
-                break;
-            default:
-                break;
-        }
+        setSelectedItemIds((val) => ({
+            ...val,
+            [`${pov}`]: id
+        }))
     }
+
     return (
         <React.Fragment>
             <Dialog
@@ -151,210 +125,76 @@ export default function ScrollDialog(props) {
                                 <Table stickyHeader aria-label="sticky table">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell
-                                                style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: '25%' }}
-                                                align="left"
-                                            >
-                                                PUW
-                                            </TableCell>
-                                            <TableCell
-                                                style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: '25%' }}
-                                                align="left"
-                                            >
-                                                YLANE
-                                            </TableCell>
-                                            <TableCell
-                                                style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: '25%' }}
-                                                align="left"
-                                            >
-                                                Order Point
-                                            </TableCell>
-                                            <TableCell
-                                                style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: '25%' }}
-                                                align="left"
-                                            >
-                                                Entrance
-                                            </TableCell>
+                                            {props.tableColumns.map((column, index) => {
+                                                return (
+                                                    <TableCell
+                                                        style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: `${100 / props.tableColumns.length}%` }}
+                                                        align="left"
+                                                    >
+                                                        {column.sceneName}
+                                                    </TableCell>
+                                                )
+                                            })
+                                            }
                                         </TableRow>
                                     </TableHead>
 
                                     <TableBody>
                                         {tableItems.map((row, index) => {
-                                            let _puw = row.find(data => data && data.SCENE_NAME === 'Scene Pull Up Window');
-                                            let _ylane = row.find(data => data && data.SCENE_NAME === 'Scene Y Lane Merge');
-                                            let _orderpoint = row.find(data => data && data.SCENE_NAME === 'Scene Order Point Outside Lane');
-                                            let _entrance = row.find(data => data && data.SCENE_NAME === 'Scene Entrance Outside Lane');
-
-                                            let puw_image = '';
-                                            let ylane_image = '';
-                                            let orderpoint_image = '';
-                                            let entrance_image = '';
-                                            
-                                            let ylane_enter_timestamp = '';
-                                            let ylane_exit_timestamp = '';
-                                            let puw_enter_timestamp = '';
-                                            let puw_exit_timestamp = '';
-                                            let orderpoint_enter_timestamp = '';
-                                            let orderpoint_exit_timestamp = '';
-                                            let entrance_enter_timestamp = '';
-                                            let entrance_exit_timestamp = '';
-
-                                            if (_puw) { // show validated image url if it is the selected session and it has validate image url
-                                                puw_image = _puw ? (_puw.defaultSelected ? (_puw.VALIDATED_IMAGE_URL || _puw.IMAGE_URL) : _puw.IMAGE_URL) : default_image;
-                                                puw_enter_timestamp = _puw && (_puw.defaultSelected ? (_puw.VALIDATED_ENTER_TIMESTAMP || _puw.ENTER_TIMESTAMP) : _puw.ENTER_TIMESTAMP);
-                                                puw_exit_timestamp = _puw && (_puw.defaultSelected ? (_puw.VALIDATED_EXIT_TIMESTAMP || _puw.EXIT_TIMESTAMP) : _puw.EXIT_TIMESTAMP);
-
-                                                ylane_image = _ylane ? (_ylane.defaultSelected ? (_ylane.VALIDATED_IMAGE_URL || _ylane.IMAGE_URL) : _ylane.IMAGE_URL) : default_image;
-                                                ylane_enter_timestamp = _ylane && (_ylane.defaultSelected ? (_ylane.VALIDATED_ENTER_TIMESTAMP || _ylane.ENTER_TIMESTAMP) : _ylane.ENTER_TIMESTAMP);
-                                                ylane_exit_timestamp = _ylane && (_ylane.defaultSelected ? (_ylane.VALIDATED_EXIT_TIMESTAMP || _ylane.EXIT_TIMESTAMP) : _ylane.EXIT_TIMESTAMP);
-                                                
-                                                orderpoint_image = _orderpoint ? (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_IMAGE_URL || _orderpoint.IMAGE_URL) : _orderpoint.IMAGE_URL) : default_image;
-                                                orderpoint_enter_timestamp = _orderpoint && (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_ENTER_TIMESTAMP || _orderpoint.ENTER_TIMESTAMP) : _orderpoint.ENTER_TIMESTAMP);
-                                                orderpoint_exit_timestamp = _orderpoint && (_orderpoint.defaultSelected ? (_orderpoint.VALIDATED_EXIT_TIMESTAMP || _orderpoint.EXIT_TIMESTAMP) : _orderpoint.EXIT_TIMESTAMP);
-                                                
-                                                entrance_image = _entrance ? (_entrance.defaultSelected ? (_entrance.VALIDATED_IMAGE_URL|| _entrance.IMAGE_URL) : _entrance.IMAGE_URL) : default_image;
-                                                entrance_enter_timestamp = _entrance && (_entrance.defaultSelected ? (_entrance.VALIDATED_ENTER_TIMESTAMP || _entrance.ENTER_TIMESTAMP) : _entrance.ENTER_TIMESTAMP);
-                                                entrance_exit_timestamp = _entrance && (_entrance.defaultSelected ? (_entrance.VALIDATED_EXIT_TIMESTAMP || _entrance.EXIT_TIMESTAMP) : _entrance.EXIT_TIMESTAMP);
-                                            }
                                             return (
-                                                // <TableItem
-                                                //     validating={props.isValidating}
-                                                //     row={item}
-                                                //     selectedItemIds={selectedItemIds}
-                                                //     handleSelect={(id, pov) => handleSelect(id, pov)}
-                                                // />
                                                 <React.Fragment key={row.JOURNEY_ID}>
                                                     <TableRow
                                                         ref={index === (insertPoint - 1) ? elementRef : null}
                                                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                                                         style={{ borderTop: 0 }}
-                                                    >
-                                                        <TableCell
-                                                            style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-                                                            align="left"
-                                                            width={'25%'}
-                                                        >
-                                                            {_puw &&
-                                                                <>
-                                                                    <div style={{ position: 'relative' }}>
-                                                                        <img
-                                                                            // onClick={props.isValidating ? () => { } : () => handleSelect(_puw?.SMALL_CIRCLE_ID, 'puw')}
-                                                                            alt="puw_image"
-                                                                            className={`samdt_img click_icon ${selectedItemIds?.puw === _puw?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-                                                                            src={puw_image}
-                                                                            style={{ opacity: selectedItemIds?.puw === _puw?.SMALL_CIRCLE_ID ? '100%' : '50%' }}
-                                                                        />
-                                                                        {_puw.IMAGE_URL &&
-                                                                            <VisibilityIcon
-                                                                                onClick={() => {
-                                                                                    setOpenImagePreview(true);
-                                                                                    setPreviewImage(puw_image)
-                                                                                }}
-                                                                                style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
-                                                                            />
-                                                                        }
-                                                                    </div>
-                                                                    <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(_puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(_puw.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
-                                                                    </div>
-                                                                </>
+                                                    >   
+                                                        {props.tableColumns.map((tableC) => {
+                                                            let rowData = row.find((d => (d && d.SCENE_NAME) === tableC.sceneName));
+                                                            let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL) : rowData.IMAGE_URL) : default_image;
+                                                            let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
+                                                            let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
+                                                            return (
+                                                                <TableCell align="left" width={'25%'} style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
+                                                                    {rowData &&
+                                                                        <>
+                                                                            <div style={{ position: 'relative' }}>
+                                                                                <img
+                                                                                    onClick={(props.isValidating || !rowData.IMAGE_URL) ? () => { } : () => {
+                                                                                        return handleSelect(rowData?.SMALL_CIRCLE_ID, rowData.SCENE_NAME)
+                                                                                    }}
+                                                                                    alt={`${rowData.sceneName}_image`}
+                                                                                    className={`samdt_img ${imageUrl ? 'click_icon' : ''} ${selectedItemIds[`${rowData.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
+                                                                                    src={imageUrl}
+                                                                                />
+                                                                                {rowData.IMAGE_URL &&
+                                                                                    <VisibilityIcon
+                                                                                        onClick={() => {
+                                                                                            setOpenImagePreview(true);
+                                                                                            setPreviewImage(imageUrl)
+                                                                                        }}
+                                                                                        style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
+                                                                                    />
+                                                                                }
 
-                                                            }
-                                                        </TableCell>
+                                                                                {rowData && rowData.JOURNEY_ID === null &&
+                                                                                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                                                                                        <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>
+                                                                                            No Journey Id
+                                                                                        </span>
+                                                                                    </div>
+                                                                                }
+                                                                            </div>
+                                                                            <div style={{ float: 'right', fontSize: 12 }}>
+                                                                                <span>IN: {moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+                                                                                <span style={{ marginLeft: 5 }}>OUT: {moment(exitTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
+                                                                            </div>
+                                                                        </>
+                                                                    }
 
-                                                        <TableCell
-                                                            style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-                                                            width={'25%'}
-                                                            align="left"
-                                                        >
-                                                            {_ylane &&
-                                                                <>
-                                                                    <div style={{ position: 'relative' }}>
-                                                                        <img
-                                                                            onClick={(props.isValidating || !_ylane.IMAGE_URL) ? () => { } : () => handleSelect(_ylane?.SMALL_CIRCLE_ID, 'ylane')}
-                                                                            alt="ylane_image"
-                                                                            className={`samdt_img ${_ylane.IMAGE_URL ? 'click_icon' : ''} ${selectedItemIds?.ylane === _ylane?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-                                                                            src={ylane_image}
-                                                                        />
-                                                                        {_ylane.IMAGE_URL &&
-                                                                            <VisibilityIcon
-                                                                                onClick={() => {
-                                                                                    setOpenImagePreview(true);
-                                                                                    setPreviewImage(ylane_image)
-                                                                                }}
-                                                                                style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
-                                                                            />
-                                                                        }
-                                                                    </div>
-
-                                                                    <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(ylane_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(ylane_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-                                                                    </div>
-                                                                </>
-                                                            }
-
-                                                        </TableCell>
-
-                                                        <TableCell width={'25%'} align="left" style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-                                                            {_orderpoint &&
-                                                                <>
-                                                                    <div style={{ position: 'relative' }}>
-                                                                        <img
-                                                                            onClick={(props.isValidating || !_orderpoint.IMAGE_URL) ? () => { } : () => handleSelect(_orderpoint?.SMALL_CIRCLE_ID, 'orderpoint')}
-                                                                            alt="orderpoint_image"
-                                                                            className={`samdt_img ${_orderpoint.IMAGE_URL ? 'click_icon' : ''} ${selectedItemIds?.orderpoint === _orderpoint?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-                                                                            src={orderpoint_image}
-                                                                        />
-                                                                        {_orderpoint.IMAGE_URL &&
-                                                                            <VisibilityIcon
-                                                                                onClick={() => {
-                                                                                    setOpenImagePreview(true);
-                                                                                    setPreviewImage(orderpoint_image)
-                                                                                }}
-                                                                                style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
-                                                                            />
-                                                                        }
-                                                                    </div>
-
-                                                                    <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(orderpoint_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(orderpoint_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-                                                                    </div>
-                                                                </>
-
-                                                            }
-                                                        </TableCell>
-
-                                                        <TableCell align="left" width={'25%'} style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-                                                            {_entrance &&
-                                                                <>
-                                                                    <div style={{ position: 'relative' }}>
-                                                                        <img
-                                                                            onClick={(props.isValidating || !_entrance.IMAGE_URL) ? () => { } : () => handleSelect(_entrance?.SMALL_CIRCLE_ID, 'entrance')}
-                                                                            alt="entrance_image"
-                                                                            className={`samdt_img ${_entrance.IMAGE_URL ? 'click_icon' : ''} ${selectedItemIds?.entrance === _entrance?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-                                                                            src={entrance_image}
-                                                                        />
-                                                                        {_entrance.IMAGE_URL &&
-                                                                            <VisibilityIcon
-                                                                                onClick={() => {
-                                                                                    setOpenImagePreview(true);
-                                                                                    setPreviewImage(entrance_image)
-                                                                                }}
-                                                                                style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
-                                                                            />
-                                                                        }
-                                                                    </div>
-                                                                    <div style={{ float: 'right', fontSize: 12 }}>
-                                                                        <span>IN: {moment(entrance_enter_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-                                                                        <span style={{ marginLeft: 5 }}>OUT: {moment(entrance_exit_timestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-                                                                    </div>
-                                                                </>
-
-                                                            }
-                                                        </TableCell>
+                                                                </TableCell>
+                                                            )
+                                                        })
+                                                        }
                                                     </TableRow>
                                                 </React.Fragment>
                                             )
