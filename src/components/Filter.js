@@ -103,6 +103,7 @@ export default function BasicTextFields(props) {
         {isCalendarOpen &&
           <DateTimePicker
             portalId="root-portal"
+            clearIcon={null}
             disableCalendar={props.fetching}
             isCalendarOpen={isCalendarOpen}
             className={props.hasData ? 'hehe' : 'hoho'}

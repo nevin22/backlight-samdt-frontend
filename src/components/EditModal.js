@@ -185,6 +185,9 @@ export default function ScrollDialog(props) {
                                                                                 }
                                                                             </div>
                                                                             <div style={{ float: 'right', fontSize: 12 }}>
+                                                                                {
+                                                                                    moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('YYYY/MM/DD - ')
+                                                                                }
                                                                                 <span>IN: {moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
                                                                                 <span style={{ marginLeft: 5 }}>OUT: {moment(exitTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
                                                                             </div>
