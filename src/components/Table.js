@@ -52,14 +52,15 @@ export default function BasicTable(props) {
     setOpenEditModal(false);
   }
 
-  let validate_data = (ids) => {
+  let validate_data = (ids, eventType) => {
     setIsValidating(true);
     axios
       .post(`http://localhost:8080/detections/validate_data`, {
         body: {
           selected_data: selectedEditData,
           small_circle_ids: ids,
-          isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED)
+          isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED),
+          eventType
         }
       }).then((res) => {
         props.updateEditedItem(res.data.updatedData)
@@ -86,22 +87,22 @@ export default function BasicTable(props) {
         contentText={'Are you certain you wish to invalidate this session ?'}
         onProceed={() => {
           axios
-          .post(`http://localhost:8080/detections/invalidate_data`, {
-            body: {
-              journey_id: idToInvalidate,
-            }
-          }).then((res) => {
-            setOpenAlert(false)
-            setIdToInvalidate('');
-            setTimeout(() => {
-              window.location.reload();
-            }, 300)
-          })
-          .catch((err) => {
-            console.log('errr', err);
-            setOpenAlert(false)
-            setIdToInvalidate('');
-          });
+            .post(`http://localhost:8080/detections/invalidate_data`, {
+              body: {
+                journey_id: idToInvalidate,
+              }
+            }).then((res) => {
+              setOpenAlert(false)
+              setIdToInvalidate('');
+              setTimeout(() => {
+                window.location.reload();
+              }, 300)
+            })
+            .catch((err) => {
+              console.log('errr', err);
+              setOpenAlert(false)
+              setIdToInvalidate('');
+            });
         }}
         title={"Invalidate Session ?"}
       />
@@ -112,7 +113,7 @@ export default function BasicTable(props) {
         editData={editData}
         fetchingEditData={fetchingEditData}
         closeModal={() => closeModal()}
-        validate_data={(ids) => validate_data(ids)}
+        validate_data={(ids, eventType) => validate_data(ids, eventType)}
         isValidating={isValidating}
       />
       <TableContainer className="table-container">
@@ -147,6 +148,8 @@ const TableRowz = (props) => {
 
   let forPublish = rowItems.find(d => d.IS_FOR_PUBLISH_FULL_JOURNEY);
   let isValidated = rowItems.find(d => d.IS_VALIDATED_FULL_JOURNEY);
+  let eventType = rowItems[0].BA_TYPE;
+
 
   let rowComponents = [];
   for (let i = 0; i <= columnLength - 1; i++) {
@@ -214,6 +217,30 @@ const TableRowz = (props) => {
                   style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
                 >
                   VALIDATED
+                </span>
+              </>
+            }
+
+            {eventType === 'Balk' &&
+              <>
+                <BeenhereIcon style={{ color: '#6B0000', height: 15, paddingLeft: 15 }} />
+                <span
+                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
+                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#6B0000', fontSize: 14 }}
+                >
+                  BALK
+                </span>
+              </>
+            }
+
+            {eventType === 'Abandon' &&
+              <>
+                <BeenhereIcon style={{ color: '#6B0000', height: 15, paddingLeft: 15 }} />
+                <span
+                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
+                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#6B0000', fontSize: 14 }}
+                >
+                  ABANDON
                 </span>
               </>
             }

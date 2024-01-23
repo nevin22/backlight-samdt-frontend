@@ -136,10 +136,10 @@ function App(props) {
   }
 
   let updateEditedItem = (data) => {
-    let journey_item = data[tableColumns.length - 1];
+    let journey_item = data[0];
     set_d((d) => {
       let d_copy = [...d];
-      let indexOfDataToUpdate = d.findIndex(item => item.JOURNEY_ID === journey_item.JOURNEY_ID);
+      let indexOfDataToUpdate = d.findIndex(item => item.JOURNEY_ID === journey_item.VALIDATED_JOURNEY);
       d_copy[indexOfDataToUpdate].DATA = data;
       return d_copy
     })

@@ -16,6 +16,7 @@ import { useState, useEffect, useRef } from "react";
 import default_image from '../assets/no_image.jpg';
 import LinearProgress from '@mui/material/LinearProgress';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import Checkbox from '@mui/material/Checkbox';
 
 import './table.css'
 
@@ -23,12 +24,19 @@ import Paper from "@mui/material/Paper";
 import moment from 'moment';
 
 export default function ScrollDialog(props) {
+    const eventTypes = [
+        'Warm Exit',
+        'Balk',
+        'Abandon'
+    ]
     const [scroll, setScroll] = React.useState('paper');
     const [previewImage, setPreviewImage] = React.useState(null);
     const [openImagePreview, setOpenImagePreview] = React.useState(false);
+    const [eventType, setEventType] = React.useState(eventTypes[0])
+    const [isBalk, setIsBalk] = React.useState(false);
     const elementRef = useRef(null);
     let setupSelected = {};
-    
+
     for (let x = 0; x <= props.tableColumns.length - 1; x++) {
         setupSelected[`${props.tableColumns[x].sceneName}`] = {
             ...props?.selectedEditData?.DATA.find(data => data && data.SCENE_NAME === props.tableColumns[x].sceneName),
@@ -47,6 +55,9 @@ export default function ScrollDialog(props) {
 
     const scrollToElement = () => {
         // Scroll to the element
+        // setIsBalk(!!props?.selectedEditData?.DATA.find(d => d.BA_TYPE === 'balk'))
+
+        setEventType(props?.selectedEditData?.DATA[0].BA_TYPE || eventTypes[0])
         if (elementRef.current) {
             elementRef.current.scrollIntoView({ behavior: 'smooth' });
         }
@@ -78,6 +89,20 @@ export default function ScrollDialog(props) {
         }))
     }
 
+    const setEventTypeFunc = (eventType) => {
+        // removed selected items for fov which originally does not have a data
+        let sceneNames = props.tableColumns.map(d => d.sceneName);
+        let originalDataSceneNames = props?.selectedEditData?.DATA.map(d => d.SCENE_NAME)
+        let itemsToRemove = sceneNames.filter(d => !originalDataSceneNames.includes(d));
+        setSelectedItemIds((items) => {
+            itemsToRemove.forEach((scene) => {
+                items[`${scene}`] = '';
+            })
+            return items
+        })
+        setEventType(eventType);  
+    }
+
     return (
         <React.Fragment>
             <Dialog
@@ -96,7 +121,11 @@ export default function ScrollDialog(props) {
 
             <Dialog
                 open={props.openEditModal}
-                onClose={() => props.closeModal()}
+                onClose={() => {
+                    // setIsBalk(false);
+                    setEventType(eventTypes[0])
+                    props.closeModal();
+                }}
                 scroll={scroll}
                 maxWidth={'xl'}
                 fullWidth={'xl'}
@@ -147,23 +176,32 @@ export default function ScrollDialog(props) {
                                                         ref={index === (insertPoint - 1) ? elementRef : null}
                                                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                                                         style={{ borderTop: 0 }}
-                                                    >   
+                                                    >
                                                         {props.tableColumns.map((tableC) => {
                                                             let rowData = row.find((d => (d && d.SCENE_NAME) === tableC.sceneName));
                                                             let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL) : rowData.IMAGE_URL) : default_image;
                                                             let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
                                                             let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
+
+                                                            let originalData = props?.selectedEditData?.DATA;
+                                                            let disabledIfBalk = ((eventType === eventTypes[1]) || (eventType === eventTypes[2])) && !originalData.find(d => d.SCENE_NAME === tableC.sceneName);
+
                                                             return (
-                                                                <TableCell align="left" width={'25%'} style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
+                                                                <TableCell
+                                                                    align="left"
+                                                                    width={`${100 / props.tableColumns.length}%`}
+                                                                    style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: disabledIfBalk ? '#A9A9A9' : 'white' }}
+                                                                >
                                                                     {rowData &&
                                                                         <>
                                                                             <div style={{ position: 'relative' }}>
                                                                                 <img
-                                                                                    onClick={(props.isValidating || !rowData.IMAGE_URL) ? () => { } : () => {
+                                                                                    onClick={(props.isValidating || !rowData.IMAGE_URL || disabledIfBalk) ? () => { } : () => {
                                                                                         return handleSelect(rowData?.SMALL_CIRCLE_ID, rowData.SCENE_NAME)
                                                                                     }}
                                                                                     alt={`${rowData.sceneName}_image`}
-                                                                                    className={`samdt_img ${imageUrl ? 'click_icon' : ''} ${selectedItemIds[`${rowData.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
+                                                                                    className={`samdt_img ${(imageUrl) ? 'click_icon' : ''} ${selectedItemIds[`${rowData.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
+                                                                                    style={{ opacity: disabledIfBalk ? '65%' : '100%' }}
                                                                                     src={imageUrl}
                                                                                 />
                                                                                 {rowData.IMAGE_URL &&
@@ -209,125 +247,36 @@ export default function ScrollDialog(props) {
                         </Paper>
                     }
                 </DialogContent>
-                <DialogActions>
-                    <Button
-                        variant="contained"
-                        style={{ fontFamily: 'Nunito', opacity: props.isValidating ? '50%' : '100%', backgroundColor: '#F0F3F5', color: 'black' }}
-                        onClick={props.isValidating ? () => { } : () => props.closeModal()}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        style={{ fontFamily: 'Nunito', opacity: props.isValidating ? '50%' : '100%' }}
-                        onClick={props.isValidating ? () => { } : () => props.validate_data(selectedItemIds)}
-                    >
-                        Apply
-                    </Button>
+                <DialogActions style={{ justifyContent: 'space-between' }}>
+                    <div>
+                        <Checkbox checked={eventType === eventTypes[0]} onClick={() => setEventTypeFunc(eventTypes[0])} />
+                        <span style={{ fontFamily: 'Nunito', fontWeight: 'bold' }}>Warm Exit</span>
+                        <Checkbox checked={eventType === eventTypes[1]} onClick={() => setEventTypeFunc(eventTypes[1])} />
+                        <span style={{ fontFamily: 'Nunito', fontWeight: 'bold' }}>Balk</span>
+                        <Checkbox checked={eventType === eventTypes[2]} onClick={() => setEventTypeFunc(eventTypes[2])} />
+                        <span style={{ fontFamily: 'Nunito', fontWeight: 'bold' }}>Abandon</span>
+                    </div>
+                    <div>
+                        <Button
+                            variant="contained"
+                            style={{ fontFamily: 'Nunito', opacity: props.isValidating ? '50%' : '100%', backgroundColor: '#F0F3F5', color: 'black' }}
+                            onClick={props.isValidating ? () => { } : () => {
+                                setEventType('Warm Exit')
+                                props.closeModal();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            style={{ fontFamily: 'Nunito', opacity: props.isValidating ? '50%' : '100%', marginLeft: 15 }}
+                            onClick={props.isValidating ? () => { } : () => props.validate_data(selectedItemIds, eventType)}
+                        >
+                            Apply
+                        </Button>
+                    </div>
                 </DialogActions>
             </Dialog>
         </React.Fragment>
     );
 }
-
-
-// const TableItem = (props) => {
-//     let puw = props.row.find(data => data && data.SCENE_NAME === 'Scene Pull Up Window');
-//     let ylane = props.row.find(data => data && data.SCENE_NAME === 'Scene Y Lane Merge');
-//     let orderpoint = props.row.find(data => data && data.SCENE_NAME === 'Scene Order Point Outside Lane');
-//     let entrance = props.row.find(data => data && data.SCENE_NAME === 'Scene Entrance Outside Lane');
-
-//     return (
-//         <React.Fragment key={props.row.JOURNEY_ID}>
-//             <TableRow
-//                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-//                 style={{ borderTop: 0 }}
-//             >
-//                 <TableCell
-//                     style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-//                     align="left"
-//                     width={'25%'}
-//                 >
-//                     {puw &&
-//                         <>
-//                             <img
-//                                 onClick={props.validating ? () => { } : () => props.handleSelect(puw?.SMALL_CIRCLE_ID, 'puw')}
-//                                 alt="puw_image"
-//                                 className={`samdt_img click_icon ${props.selectedItemIds?.puw === puw?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-//                                 src={(puw && puw.IMAGE_URL) || null}
-//                             />
-
-//                             <div style={{ float: 'right', fontSize: 12 }}>
-//                                 <span>IN: {moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-//                                 <span style={{ marginLeft: 5 }}>OUT: {moment(puw.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
-//                             </div>
-//                         </>
-
-//                     }
-//                 </TableCell>
-
-//                 <TableCell
-//                     style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-//                     width={'25%'}
-//                     align="left"
-//                 >
-//                     {ylane &&
-//                         <>
-//                             <img
-//                                 onClick={props.validating ? () => { } : () => props.handleSelect(ylane?.SMALL_CIRCLE_ID, 'ylane')}
-//                                 alt="ylane_image"
-//                                 className={`samdt_img click_icon ${props.selectedItemIds?.ylane === ylane?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-//                                 src={(ylane && ylane.IMAGE_URL) || null}
-//                             />
-
-//                             <div style={{ float: 'right', fontSize: 12 }}>
-//                                 <span>IN: {moment(ylane.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-//                                 <span style={{ marginLeft: 5 }}>OUT: {moment(ylane.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-//                             </div>
-//                         </>
-
-//                     }
-
-//                 </TableCell>
-
-//                 <TableCell width={'25%'} align="left" style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-//                     {orderpoint &&
-//                         <>
-//                             <img
-//                                 onClick={props.validating ? () => { } : () => props.handleSelect(orderpoint?.SMALL_CIRCLE_ID, 'orderpoint')}
-//                                 alt="orderpoint_image"
-//                                 className={`samdt_img click_icon ${props.selectedItemIds?.orderpoint === orderpoint?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-//                                 src={(orderpoint && orderpoint.IMAGE_URL) || null}
-//                             />
-
-//                             <div style={{ float: 'right', fontSize: 12 }}>
-//                                 <span>IN: {moment(orderpoint.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-//                                 <span style={{ marginLeft: 5 }}>OUT: {moment(orderpoint.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-//                             </div>
-//                         </>
-
-//                     }
-//                 </TableCell>
-
-//                 <TableCell align="left" width={'25%'} style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-//                     {entrance &&
-//                         <>
-//                             <img
-//                                 onClick={props.validating ? () => { } : () => props.handleSelect(entrance?.SMALL_CIRCLE_ID, 'entrance')}
-//                                 alt="entrance_image"
-//                                 className={`samdt_img click_icon ${props.selectedItemIds?.entrance === entrance?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-//                                 src={(entrance && entrance.IMAGE_URL) || null}
-//                             />
-
-//                             <div style={{ float: 'right', fontSize: 12 }}>
-//                                 <span>IN: {moment(entrance.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-//                                 <span style={{ marginLeft: 5 }}>OUT: {moment(entrance.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-//                             </div>
-//                         </>
-
-//                     }
-//                 </TableCell>
-//             </TableRow>
-//         </React.Fragment>
-//     );
-// };
