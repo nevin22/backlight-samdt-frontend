@@ -177,31 +177,36 @@ export default function ScrollDialog(props) {
                                                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                                                         style={{ borderTop: 0 }}
                                                     >
-                                                        {props.tableColumns.map((tableC) => {
+                                                        {props.tableColumns.map((tableC, tIndex) => {
                                                             let rowData = row.find((d => (d && d.SCENE_NAME) === tableC.sceneName));
                                                             let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL) : rowData.IMAGE_URL) : default_image;
                                                             let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
                                                             let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
 
                                                             let originalData = props?.selectedEditData?.DATA;
-                                                            let disabledIfBalk = ((eventType === eventTypes[1]) || (eventType === eventTypes[2])) && !originalData.find(d => d.SCENE_NAME === tableC.sceneName);
+                                                            let select_disabled = false;
+                                                            if ((eventType === eventTypes[1]) && !originalData.find(d => d.SCENE_NAME === tableC.sceneName)) {
+                                                                select_disabled = true;
+                                                            } else if (eventType === eventTypes[2]) {
+                                                                select_disabled = tIndex === 0;
+                                                            }
 
                                                             return (
                                                                 <TableCell
                                                                     align="left"
                                                                     width={`${100 / props.tableColumns.length}%`}
-                                                                    style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: disabledIfBalk ? '#A9A9A9' : 'white' }}
+                                                                    style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: select_disabled ? '#A9A9A9' : 'white' }}
                                                                 >
                                                                     {rowData &&
                                                                         <>
                                                                             <div style={{ position: 'relative' }}>
                                                                                 <img
-                                                                                    onClick={(props.isValidating || !rowData.IMAGE_URL || disabledIfBalk) ? () => { } : () => {
+                                                                                    onClick={(props.isValidating || !rowData.IMAGE_URL || select_disabled) ? () => { } : () => {
                                                                                         return handleSelect(rowData?.SMALL_CIRCLE_ID, rowData.SCENE_NAME)
                                                                                     }}
                                                                                     alt={`${rowData.sceneName}_image`}
                                                                                     className={`samdt_img ${(imageUrl) ? 'click_icon' : ''} ${selectedItemIds[`${rowData.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
-                                                                                    style={{ opacity: disabledIfBalk ? '65%' : '100%' }}
+                                                                                    style={{ opacity: select_disabled ? '65%' : '100%' }}
                                                                                     src={imageUrl}
                                                                                 />
                                                                                 {rowData.IMAGE_URL &&
