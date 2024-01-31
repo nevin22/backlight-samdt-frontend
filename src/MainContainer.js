@@ -29,7 +29,7 @@ function App(props) {
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [successSnackBar, setSuccessSnackBar] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(moment().subtract(1, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss.SSS'));
 
   const [tableColumns, setTableColumns] = useState([]);
 
@@ -79,6 +79,7 @@ function App(props) {
         setPage(1);
         setPaginated_d(res.data.detections.slice(0, rowsPerPage));
         setFetching(false);
+        setIsListFiltered(false);
       })
       .catch((err) => {
         console.log("err", err);
@@ -133,6 +134,21 @@ function App(props) {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));
     }
+  }
+
+  let filterViaSlider = (min, max) => {
+    let slider_d = d.filter(d2 => {
+      let index_with_data = d2.DATA.filter(d3 => d3.NO_DATA !== true).map(d4 => parseInt(d4.ORDER_INDEX))
+      let dataToUse = d2.DATA.find(data => parseInt(data.ORDER_INDEX) === Math.min(...index_with_data));
+      let timestamp_to_use = dataToUse.IS_VALIDATED ? dataToUse.VALIDATED_ENTER_TIMESTAMP : dataToUse.ENTER_TIMESTAMP
+
+      return (timestamp_to_use > min) && (timestamp_to_use < max);
+    })
+
+    setFiltered_d(slider_d);
+    setPage(1);
+    setPaginated_d(slider_d.slice(0, rowsPerPage));
+    setIsListFiltered(true);
   }
 
   let updateEditedItem = (data) => {
@@ -202,6 +218,7 @@ function App(props) {
               rowsPerPage={rowsPerPage}
               page={page}
               origignalResultsCount={d.length}
+              originalData={d}
               pageCount={Math.ceil(isListFiltered ? (filtered_d.length / rowsPerPage) : (d.length / rowsPerPage))}
               resultsCount={isListFiltered ? filtered_d.length : d.length}
               updatePage={(page) => setPage(page)}
@@ -213,6 +230,7 @@ function App(props) {
               hasFilter={isListFiltered}
               showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
               hasData={d.length > 0}
+              filterViaSlider={(min, max) => filterViaSlider(min,max)}
             />
 
             {fetching &&

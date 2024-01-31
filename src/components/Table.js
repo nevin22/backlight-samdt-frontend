@@ -122,6 +122,7 @@ export default function BasicTable(props) {
             {detections.map((row, index) => {
               return (
                 <TableRowz
+                  key={index}
                   tableColumns={props.tableColumns}
                   env={props.env}
                   keyy={`${row.delta_id}`}
@@ -194,7 +195,7 @@ const TableRowz = (props) => {
         style={{ backgroundColor: isValidated ? '#81bffc' : '' }}
       >
         <TableCell
-          colSpan={4}
+          colSpan={columnLength}
           style={{ fontFamily: "Nunito", fontSize: 18, fontWeight: "bold", borderBottom: 0, paddingBottom: 0 }}
           align="left"
         >

@@ -157,6 +157,7 @@ export default function ScrollDialog(props) {
                                             {props.tableColumns.map((column, index) => {
                                                 return (
                                                     <TableCell
+                                                        key={index}
                                                         style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: '#E7EBF0', width: `${100 / props.tableColumns.length}%` }}
                                                         align="left"
                                                     >
