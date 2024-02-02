@@ -23,7 +23,7 @@ import './table.css'
 import Paper from "@mui/material/Paper";
 import moment from 'moment';
 
-export default function ScrollDialog(props) {
+export default function EditModal(props) {
     const eventTypes = [
         'Warm Exit',
         'Balk',
@@ -100,7 +100,7 @@ export default function ScrollDialog(props) {
             })
             return items
         })
-        setEventType(eventType);  
+        setEventType(eventType);
     }
 
     return (
@@ -128,7 +128,7 @@ export default function ScrollDialog(props) {
                 }}
                 scroll={scroll}
                 maxWidth={'xl'}
-                fullWidth={'xl'}
+                fullWidth
                 aria-labelledby="scroll-dialog-title"
                 aria-describedby="scroll-dialog-description"
             >
@@ -172,15 +172,16 @@ export default function ScrollDialog(props) {
                                     <TableBody>
                                         {tableItems.map((row, index) => {
                                             return (
-                                                <React.Fragment key={row.JOURNEY_ID}>
+                                                <React.Fragment key={index}>
                                                     <TableRow
+                                                        key={ index}
                                                         ref={index === (insertPoint - 1) ? elementRef : null}
                                                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                                                         style={{ borderTop: 0 }}
                                                     >
                                                         {props.tableColumns.map((tableC, tIndex) => {
                                                             let rowData = row.find((d => (d && d.SCENE_NAME) === tableC.sceneName));
-                                                            let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL) : rowData.IMAGE_URL) : default_image;
+                                                            let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL || default_image) : rowData.IMAGE_URL) : default_image;
                                                             let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
                                                             let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
 
@@ -194,6 +195,7 @@ export default function ScrollDialog(props) {
 
                                                             return (
                                                                 <TableCell
+                                                                    key={tIndex}
                                                                     align="left"
                                                                     width={`${100 / props.tableColumns.length}%`}
                                                                     style={{ fontFamily: "Nunito", fontWeight: "bold", backgroundColor: select_disabled ? '#A9A9A9' : 'white' }}

@@ -121,11 +121,11 @@ export default function BasicTable(props) {
           <TableBody>
             {detections.map((row, index) => {
               return (
-                <TableRowz
-                  key={index}
+                <CustomTableRow
                   tableColumns={props.tableColumns}
                   env={props.env}
-                  keyy={`${row.delta_id}`}
+                  key={`${index}`}
+                  propKey={`${index}`}
                   row={row}
                   index={index}
                   openEditModal={(data) => openEditModal(data)}
@@ -143,10 +143,9 @@ export default function BasicTable(props) {
   );
 }
 
-const TableRowz = (props) => {
+const CustomTableRow = (props) => {
   let rowItems = props.row.DATA;
   let columnLength = props.tableColumns.length;
-
   let forPublish = rowItems.find(d => d.IS_FOR_PUBLISH_FULL_JOURNEY);
   let isValidated = rowItems.find(d => d.IS_VALIDATED_FULL_JOURNEY);
   let eventType = rowItems[0].BA_TYPE;
@@ -159,6 +158,7 @@ const TableRowz = (props) => {
       let image = item.VALIDATED_IMAGE_URL ? item.VALIDATED_IMAGE_URL : (item.IMAGE_URL || default_image);
       rowComponents.push(
         <StyledTableCell
+          key={i}
           style={{ fontFamily: "Nunito", fontWeight: "bold" }}
           align="left"
           width={`${100 / columnLength}%`}
@@ -178,6 +178,7 @@ const TableRowz = (props) => {
     } else {
       rowComponents.push(
         <StyledTableCell
+          key={i}
           style={{ fontFamily: "Nunito", fontWeight: "bold" }}
           align='center'
           width={`${100 / columnLength}%`}
@@ -186,11 +187,11 @@ const TableRowz = (props) => {
         </StyledTableCell>
       )
     }
-  }
+  } 
 
   return (
-    <React.Fragment key={props.row.JOURNEY_ID}>
-      <TableRow key={props.row.JOURNEY_ID}
+    <React.Fragment key={props.propKey}>
+      <TableRow key={props.propKey}
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
         style={{ backgroundColor: isValidated ? '#81bffc' : '' }}
       >
@@ -261,71 +262,6 @@ const TableRowz = (props) => {
         style={{ borderTop: 0, backgroundColor: isValidated ? '#81bffc' : '' }}
       >
         {rowComponents}
-        {/* <StyledTableCell
-          style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-          align="left"
-          width={'25%'}
-        >
-          <img
-            alt="puw_image"
-            className="samdt_img"
-            src={(puw && puw.IMAGE_URL) || default_image}
-          />
-          {puw &&
-            <div style={{ float: 'right', fontSize: 12 }}>
-              <span style={{ marginRight: 10 }}>{moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
-              <span>IN: {moment(puw.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-              <span style={{ marginLeft: 5 }}>OUT: {moment(puw.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
-            </div>
-          }
-        </StyledTableCell>
-
-        <StyledTableCell
-          style={{ fontFamily: "Nunito", fontWeight: "bold" }}
-          width={'25%'}
-          align="left"
-        >
-          <img
-            alt="ylane_image"
-            className="samdt_img"
-            src={(puw.IS_VALIDATED ? ylane.VALIDATED_IMAGE_URL : (ylane && ylane.IMAGE_URL || default_image)) || default_image}
-          />
-          {ylane &&
-            <div style={{ float: 'right', fontSize: 12 }}>
-              <span>IN: {moment(puw.IS_VALIDATED ? ylane.VALIDATED_ENTER_TIMESTAMP : ylane.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-              <span style={{ marginLeft: 5 }}>OUT: {moment(puw.IS_VALIDATED ? ylane.VALIDATED_EXIT_TIMESTAMP : ylane.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-            </div>
-
-          }
-        </StyledTableCell>
-
-        <StyledTableCell width={'25%'} align="left" style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-          <img
-            alt="ylane_image"
-            className="samdt_img"
-            src={(puw.IS_VALIDATED ? orderpoint.VALIDATED_IMAGE_URL : (orderpoint && orderpoint.IMAGE_URL || default_image)) || default_image}
-          />
-          {orderpoint &&
-            <div style={{ float: 'right', fontSize: 12 }}>
-              <span>IN: {moment(puw.IS_VALIDATED ? orderpoint.VALIDATED_ENTER_TIMESTAMP : orderpoint.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-              <span style={{ marginLeft: 5 }}>OUT: {moment(puw.IS_VALIDATED ? orderpoint.VALIDATED_EXIT_TIMESTAMP : orderpoint.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-            </div>
-          }
-        </StyledTableCell>
-
-        <StyledTableCell align="left" width={'25%'} style={{ fontFamily: "Nunito", fontWeight: "bold" }}>
-          <img
-            alt="ylane_image"
-            className="samdt_img"
-            src={(puw.IS_VALIDATED ? entrance.VALIDATED_IMAGE_URL : (entrance && entrance.IMAGE_URL || default_image)) || default_image}
-          />
-          {entrance &&
-            <div style={{ float: 'right', fontSize: 12 }}>
-              <span>IN: {moment(puw.IS_VALIDATED ? entrance.VALIDATED_ENTER_TIMESTAMP : entrance.ENTER_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-              <span style={{ marginLeft: 5 }}>OUT: {moment(puw.IS_VALIDATED ? entrance.VALIDATED_EXIT_TIMESTAMP : entrance.EXIT_TIMESTAMP, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
-            </div>
-          }
-        </StyledTableCell> */}
       </StyledTableRow>
     </React.Fragment>
   );

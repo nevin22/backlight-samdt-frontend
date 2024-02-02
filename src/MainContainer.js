@@ -1,63 +1,54 @@
 import "./App.css";
+import Config from './config';
 import Filter from "./components/Filter";
 import Table from "./components/Table";
 import axios from "axios";
 import { Player } from "@lottiefiles/react-lottie-player";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import LoadingAnimation from '../src/assets/lottie/lf30_xhjuaccs.json';
+import LoadingAnimation from './assets/lottie/lf30_xhjuaccs.json';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import AlertDialog from "./components/AlertDialog";
 import Snackbar from "./components/SnackBar";
 import Button from '@mui/material/Button';
-import { CatchingPokemonSharp } from "@mui/icons-material";
 
 function App(props) {
   const [d, set_d] = useState([]);
   const [paginated_d, setPaginated_d] = useState([]);
-
   const [isListFiltered, setIsListFiltered] = useState(false);
   const [filtered_d, setFiltered_d] = useState([]);
-
-
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [page, setPage] = useState(1);
-
   const [fetching, setFetching] = useState(false);
-
   const [openAlert, setOpenAlert] = useState(false);
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [successSnackBar, setSuccessSnackBar] = useState(false);
-
   const [selectedDate, setSelectedDate] = useState(moment().subtract(1, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss.SSS'));
-
   const [tableColumns, setTableColumns] = useState([]);
 
-  const [env, setEnv] = useState({
-    url: "http://localhost:8080",
-  });
+  const [env, setEnv] = useState({ url: Config.backend_link });
 
-  useEffect(() => {
-    const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
-    setFetching(true);
-    axios
-      .get(`${env.url}/detections/samdt_list`, {
-        params: {
-          startTime: moment().subtract(1, 'days').startOf('day').format(desiredFormat),
-          endTime: moment().subtract('days').startOf('day').format(desiredFormat)
-        }
-      })
-      .then((res) => {
-        setTableColumns(setUpTableColumns(res.data.detections))
-        set_d(res.data.detections);
-        setPaginated_d(res.data.detections.slice(0, rowsPerPage));
-        setFetching(false)
-      })
-      .catch((err) => {
-        console.log("err", err);
-        setFetching(false)
-      });
-  }, [env]);
+  // useEffect(() => {
+  //   const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
+  //   setFetching(true);
+  //   axios
+  //     .get(`${env.url}/detections/samdt_list`, {
+  //       params: {
+  //         startTime: moment().subtract(1, 'days').startOf('day').format(desiredFormat),
+  //         endTime: moment().subtract('days').startOf('day').format(desiredFormat)
+  //       }
+  //     })
+  //     .then((res) => {
+  //       setTableColumns(setUpTableColumns(res.data.detections))
+  //       set_d(res.data.detections);
+  //       setPaginated_d(res.data.detections.slice(0, rowsPerPage));
+  //       setFetching(false)
+  //     })
+  //     .catch((err) => {
+  //       console.log("err", err);
+  //       setFetching(false)
+  //     });
+  // }, [env]);
 
   useEffect(() => {
   }, [page])
