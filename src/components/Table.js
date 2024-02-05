@@ -1,21 +1,25 @@
+import React from 'react';
+import { useEffect, useState } from "react";
+import moment from 'moment';
+import axios from "axios";
+
+import backendService from '../services/backendService';
+
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import BeenhereIcon from '@mui/icons-material/Beenhere';
-import Popover from '@mui/material/Popover';
 import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import ErrorIcon from '@mui/icons-material/Error';
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
+
 import default_image from '../assets/no_image.jpg';
-import { useEffect, useState } from "react";
-import React from 'react';
 import EditModal from './EditModal';
-import moment from 'moment';
-import axios from "axios";
-import './table.css'
 import AlertDialog from "./AlertDialog";
+
+import './table.css'
 
 export default function BasicTable(props) {
   let [detections, setDetections] = useState(props.detectionz);
@@ -31,48 +35,36 @@ export default function BasicTable(props) {
     setOpenEditModal(true);
     setselectedEditData(data);
     setFetchingEditData(true);
-    axios
-      .get(`http://localhost:8080/detections/samdt_edit_list`, {
-        params: {
-          journey_id: data.JOURNEY_ID,
-          data: data.DATA,
-          tableColumns: props.tableColumns
-        }
-      }).then((res) => {
+
+    backendService.getEditList(data, props.tableColumns)
+      .then(res => {
         setFetchingEditData(false);
         setEditData(formatEditData(res, data, props.tableColumns))
       })
-      .catch((err) => {
+      .catch(err => {
         console.log("err", err);
         setFetchingEditData(false);
-      });
+      })
   }
 
   let closeModal = () => {
     setOpenEditModal(false);
   }
 
-  let validate_data = (ids, eventType) => {
+  let validate_data = (ids, eventType, selectedEditData) => {
     setIsValidating(true);
-    axios
-      .post(`http://localhost:8080/detections/validate_data`, {
-        body: {
-          selected_data: selectedEditData,
-          small_circle_ids: ids,
-          isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED),
-          eventType
-        }
-      }).then((res) => {
-        props.updateEditedItem(res.data.updatedData)
+    backendService.validateData(ids, eventType, selectedEditData)
+      .then(res => {
         setIsValidating(false);
+        props.updateEditedItem(res.updatedData)
         props.openSnackBar({ success: true })
         closeModal();
       })
-      .catch((err) => {
+      .catch(err => {
         setIsValidating(false);
         alert('An error has occured while editing');
         console.log("err", err);
-      });
+      })
   }
 
   useEffect(() => {
@@ -85,26 +77,22 @@ export default function BasicTable(props) {
         closeAlert={() => setOpenAlert(false)}
         openAlert={openAlert}
         contentText={'Are you certain you wish to invalidate this session ?'}
+        title={"Invalidate Session ?"}
         onProceed={() => {
-          axios
-            .post(`http://localhost:8080/detections/invalidate_data`, {
-              body: {
-                journey_id: idToInvalidate,
-              }
-            }).then((res) => {
+          backendService.invalidateData(idToInvalidate)
+            .then(res => {
               setOpenAlert(false)
               setIdToInvalidate('');
               setTimeout(() => {
                 window.location.reload();
               }, 300)
             })
-            .catch((err) => {
+            .catch(err => {
               console.log('errr', err);
               setOpenAlert(false)
               setIdToInvalidate('');
-            });
+            })
         }}
-        title={"Invalidate Session ?"}
       />
       <EditModal
         tableColumns={props.tableColumns}
@@ -113,7 +101,7 @@ export default function BasicTable(props) {
         editData={editData}
         fetchingEditData={fetchingEditData}
         closeModal={() => closeModal()}
-        validate_data={(ids, eventType) => validate_data(ids, eventType)}
+        validate_data={(ids, eventType) => validate_data(ids, eventType, selectedEditData)}
         isValidating={isValidating}
       />
       <TableContainer className="table-container">
@@ -168,7 +156,13 @@ const CustomTableRow = (props) => {
             className="samdt_img"
             src={image}
           />
-          <div style={{ float: 'right', fontSize: 12 }}>
+          <div style={{ float: 'right', fontSize: 12, display: 'flex', placeContent: 'center' }}>
+            {!!item.IS_BA &&
+              <React.Fragment>
+                <ErrorIcon style={{ height: 15, width: 15, marginRight: 5, color: '#ff7474' }} />
+                <span style={{ fontFamily: 'Nunito', marginRight: 10, color: '#ff7474' }}>BA</span>
+              </React.Fragment>
+            }
             <span style={{ marginRight: 10 }}>{moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
             <span>IN: {moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
             <span style={{ marginLeft: 5 }}>OUT: {moment((item.VALIDATED_EXIT_TIMESTAMP || item.EXIT_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
@@ -187,7 +181,7 @@ const CustomTableRow = (props) => {
         </StyledTableCell>
       )
     }
-  } 
+  }
 
   return (
     <React.Fragment key={props.propKey}>
@@ -268,7 +262,7 @@ const CustomTableRow = (props) => {
 };
 
 const formatEditData = (d, selectedData, tableColumns) => {
-  let data = d.data.rows;
+  let data = d.rows;
   let selectedDataArray = selectedData.DATA;
   let editItemPerFov = tableColumns.map((column, index) => {
     return ({

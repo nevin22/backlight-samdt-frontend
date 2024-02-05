@@ -1,4 +1,8 @@
 import * as React from 'react';
+import { useState, useEffect, useRef } from "react";
+import moment from 'moment';
+import { Player } from "@lottiefiles/react-lottie-player";
+
 import Button from '@mui/material/Button';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -6,22 +10,18 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
-import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { Player } from "@lottiefiles/react-lottie-player";
-import LoadingAnimation from '../assets/lottie/lf30_xhjuaccs.json';
-import { useState, useEffect, useRef } from "react";
-import default_image from '../assets/no_image.jpg';
 import LinearProgress from '@mui/material/LinearProgress';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Checkbox from '@mui/material/Checkbox';
-
-import './table.css'
-
 import Paper from "@mui/material/Paper";
-import moment from 'moment';
+
+import LoadingAnimation from '../assets/lottie/lf30_xhjuaccs.json';
+import default_image from '../assets/no_image.jpg';
+import './table.css'
 
 export default function EditModal(props) {
     const eventTypes = [
@@ -29,12 +29,14 @@ export default function EditModal(props) {
         'Balk',
         'Abandon'
     ]
-    const [scroll, setScroll] = React.useState('paper');
-    const [previewImage, setPreviewImage] = React.useState(null);
-    const [openImagePreview, setOpenImagePreview] = React.useState(false);
-    const [eventType, setEventType] = React.useState(eventTypes[0])
-    const [isBalk, setIsBalk] = React.useState(false);
+    const [scroll, setScroll] = useState('paper');
+    const [previewImage, setPreviewImage] = useState(null);
+    const [openImagePreview, setOpenImagePreview] = useState(false);
+    const [eventType, setEventType] = useState(eventTypes[0])
+    const [isBalk, setIsBalk] = useState(false);
+    const [selectedItemIds, setSelectedItemIds] = useState(null);
     const elementRef = useRef(null);
+
     let setupSelected = {};
 
     for (let x = 0; x <= props.tableColumns.length - 1; x++) {
@@ -54,16 +56,11 @@ export default function EditModal(props) {
     tableItems.splice(insertIndex, 0, Object.values(setupSelected))
 
     const scrollToElement = () => {
-        // Scroll to the element
-        // setIsBalk(!!props?.selectedEditData?.DATA.find(d => d.BA_TYPE === 'balk'))
-
         setEventType(props?.selectedEditData?.DATA[0].BA_TYPE || eventTypes[0])
         if (elementRef.current) {
             elementRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     };
-
-    let [selectedItemIds, setSelectedItemIds] = useState(null);
 
     useEffect(() => {
         let setupSelected = {};
@@ -255,6 +252,7 @@ export default function EditModal(props) {
                         </Paper>
                     }
                 </DialogContent>
+
                 <DialogActions style={{ justifyContent: 'space-between' }}>
                     <div>
                         <Checkbox checked={eventType === eventTypes[0]} onClick={() => setEventTypeFunc(eventTypes[0])} />

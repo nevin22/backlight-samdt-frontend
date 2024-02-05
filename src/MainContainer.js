@@ -1,13 +1,15 @@
+import { useEffect, useState } from "react";
+import moment from "moment";
+import { Player } from "@lottiefiles/react-lottie-player";
+import SearchOffIcon from '@mui/icons-material/SearchOff';
+
+import backendService from './services/backendService';
+
 import "./App.css";
 import Config from './config';
 import Filter from "./components/Filter";
 import Table from "./components/Table";
-import axios from "axios";
-import { Player } from "@lottiefiles/react-lottie-player";
-import moment from "moment";
-import { useEffect, useState } from "react";
 import LoadingAnimation from './assets/lottie/lf30_xhjuaccs.json';
-import SearchOffIcon from '@mui/icons-material/SearchOff';
 import AlertDialog from "./components/AlertDialog";
 import Snackbar from "./components/SnackBar";
 import Button from '@mui/material/Button';
@@ -28,69 +30,37 @@ function App(props) {
 
   const [env, setEnv] = useState({ url: Config.backend_link });
 
-  // useEffect(() => {
-  //   const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
-  //   setFetching(true);
-  //   axios
-  //     .get(`${env.url}/detections/samdt_list`, {
-  //       params: {
-  //         startTime: moment().subtract(1, 'days').startOf('day').format(desiredFormat),
-  //         endTime: moment().subtract('days').startOf('day').format(desiredFormat)
-  //       }
-  //     })
-  //     .then((res) => {
-  //       setTableColumns(setUpTableColumns(res.data.detections))
-  //       set_d(res.data.detections);
-  //       setPaginated_d(res.data.detections.slice(0, rowsPerPage));
-  //       setFetching(false)
-  //     })
-  //     .catch((err) => {
-  //       console.log("err", err);
-  //       setFetching(false)
-  //     });
-  // }, [env]);
-
   useEffect(() => {
   }, [page])
 
   let fetchData = (date, filters) => {
-    const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
     setFetching(true);
-    axios
-      .get(`${env.url}/detections/samdt_list`, {
-        params: {
-          startTime: (date && moment(date).startOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
-          endTime: (date && moment(date).endOf('day').format(desiredFormat)) || moment().subtract('days').startOf('day').format(desiredFormat),
-          filters
-        }
-      })
+    backendService.getDetections(date, filters)
       .then((res) => {
-        setTableColumns(setUpTableColumns(res.data.detections))
-        set_d(res.data.detections);
+        setTableColumns(setUpTableColumns(res.detections))
+        set_d(res.detections);
         setPage(1);
-        setPaginated_d(res.data.detections.slice(0, rowsPerPage));
+        setPaginated_d(res.detections.slice(0, rowsPerPage));
         setFetching(false);
-        setIsListFiltered(false);
       })
-      .catch((err) => {
+      .catch(err => {
         console.log("err", err);
         setFetching(false)
-      });
+      })
   }
 
   let syncToManifest = () => {
-    axios
-      .post(`${env.url}/detections/sync_data_to_manifest`)
-      .then((res) => {
+    backendService.prepDataForSyncing()
+      .then(res => {
         setOpenSnackBar(true);
         setSuccessSnackBar(true);
         fetchData(selectedDate);
       })
-      .catch((err) => {
+      .catch(err => {
         setOpenSnackBar(true);
         setSuccessSnackBar(false);
         console.log("err", err);
-      });
+      })
   }
 
 
@@ -221,7 +191,7 @@ function App(props) {
               hasFilter={isListFiltered}
               showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
               hasData={d.length > 0}
-              filterViaSlider={(min, max) => filterViaSlider(min,max)}
+              filterViaSlider={(min, max) => filterViaSlider(min, max)}
             />
 
             {fetching &&
