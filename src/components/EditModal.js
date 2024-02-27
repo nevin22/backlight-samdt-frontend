@@ -47,8 +47,10 @@ export default function EditModal(props) {
     }
 
     let tableItems = [...props.editData];
-    let insertIndex = tableItems.map(d => d[0]).findIndex(data => {
-        return data?.ENTER_TIMESTAMP < Object.values(setupSelected)[0].ENTER_TIMESTAMP
+
+    let selectedItemIndexWithData = Object.values(setupSelected).findIndex(d => !!d.IMAGE_URL);
+    let insertIndex = tableItems.map(d => d[selectedItemIndexWithData]).findIndex(data => {
+        return data?.ENTER_TIMESTAMP < Object.values(setupSelected)[selectedItemIndexWithData].ENTER_TIMESTAMP
     })
 
     let insertPoint = (tableItems.length / 2) || 0;
