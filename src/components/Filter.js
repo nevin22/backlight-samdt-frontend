@@ -1,5 +1,6 @@
 import * as React from "react";
 import DateTimePicker from "react-datetime-picker";
+import Cookies from 'js-cookie';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useState } from "react";
@@ -13,16 +14,17 @@ import FilterOptions from './FilterOptions';
 import Drawer from '@mui/material/Drawer';
 import Slider from './Slider';
 
+
 export default function BasicTextFields(props) {
   const [dateValue, onChange] = useState(moment().subtract(1, 'days').startOf('day').toDate());
   const [onlyShowValidated, setOnlyShowValidated] = useState(false);
   const [isCalendarOpen, setIsCalenderOpen] = useState(false);
-  const [drawerIsOpen, setDrawerIsOpen] = useState(true);
+  const [drawerIsOpen, setDrawerIsOpen] = useState(!(!!Cookies.get('network') && !!Cookies.get('site')));
 
-  const [selectedNetwork, setNetwork] = useState('');
-  const [selectedSite, setSite] = useState('');
+  const [selectedNetwork, setNetwork] = useState(Cookies.get('network') || '');
+  const [selectedSite, setSite] = useState(Cookies.get('site') || '');
   const [optionNetworks, setOptionNetworks] = useState([]);
-  const [optionSites, setOptionSites] = useState([]);
+  const [optionSites, setOptionSites] = useState(!!Cookies.get('site') ? [Cookies.get('site')]: []);
 
   let debounce_timer = null;
   const [dateChangeIndicator, setDateChangeIndicator] = useState(1);

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import moment from "moment";
 import { Player } from "@lottiefiles/react-lottie-player";
 import SearchOffIcon from '@mui/icons-material/SearchOff';
+import Cookies from 'js-cookie';
 
 import backendService from './services/backendService';
+import { useQueryDetection } from './queryHooks/useQueryDetections';
 
 import "./App.css";
 import Config from './config';
@@ -29,6 +31,12 @@ function App(props) {
   const [tableColumns, setTableColumns] = useState([]);
 
   const [env, setEnv] = useState({ url: Config.backend_link });
+
+  useEffect(() => {
+    if (!!Cookies.get('network') && !!Cookies.get('site')) {
+      fetchData(selectedDate, { network: Cookies.get('network'), site: Cookies.get('site') })
+    }
+  }, [])
 
   useEffect(() => {
   }, [page])
@@ -171,6 +179,7 @@ function App(props) {
           onProceed={() => syncToManifest()}
           title={"Sync to manifest ?"}
         />
+
         <div>
           <div>
             <Filter

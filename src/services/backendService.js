@@ -23,7 +23,7 @@ const backendService = {
     },
     prepDataForSyncing: async () => {
         try {
-            const response = await axios.get(`${BASE_URL}/detections/sync_data_to_manifest`);
+            const response = await axios.post(`${BASE_URL}/detections/sync_data_to_manifest`);
             return response.data;
         } catch (error) {
             console.error("Error while syncing:", error);

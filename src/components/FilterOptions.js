@@ -7,6 +7,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import axios from "axios";
 import { useEffect, useState } from "react";
+import Cookies from 'js-cookie';
 import CircularProgress from '@mui/material/CircularProgress';
 
 export default function BasicSelect(props) {
@@ -27,6 +28,10 @@ export default function BasicSelect(props) {
                 setLoading(false);
                 console.log(err)
             })
+            
+        if (Cookies.get('network')) {
+            get_sites(Cookies.get('network'))
+        }
     }, [])
 
     const get_sites = (network) => {
@@ -46,11 +51,15 @@ export default function BasicSelect(props) {
         })
     }
     const handleChangeNetwork = (event) => {
+        Cookies.set('network', event.target.value);
+        Cookies.remove('site');
         setNetwork(event.target.value);
+
         get_sites(event.target.value);
     };
 
     const handleChangeSite = (event) => {
+        Cookies.set('site', event.target.value);
         setSite(event.target.value);
     };
 
