@@ -19,6 +19,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import Checkbox from '@mui/material/Checkbox';
 import Paper from "@mui/material/Paper";
 
+import ImageMagnifier from './ImageMagnifier';
+
 import LoadingAnimation from '../assets/lottie/lf30_xhjuaccs.json';
 import default_image from '../assets/no_image.jpg';
 import './table.css'
@@ -110,11 +112,12 @@ export default function EditModal(props) {
                 maxWidth={'lg'}
             >
                 <DialogContent>
-                    <img
+                    {/* <img
                         style={{ height: 540, width: 960 }}
                         alt="hehe_image"
                         src={previewImage}
-                    />
+                    /> */}
+                    <ImageMagnifier url={previewImage} />
                 </DialogContent>
             </Dialog>
 

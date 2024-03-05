@@ -61,3 +61,19 @@ display: none;
 .edit-table-container::-webkit-scrollbar {
     display: none;
 }
+
+
+.img-magnifier-container {
+    position: relative;
+}
+
+.magnifier-img {
+    width: 960px;
+    height: 540px;
+}
+
+.magnifier-image {
+    width: 200px;
+    height: 200px;
+    border: 2px solid #fff;
+}
