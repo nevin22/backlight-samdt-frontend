@@ -7,10 +7,13 @@ const ImageMagnifier = ({ url }) => {
 
     const handleMouseHover = (e) => {
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-        const x = ((e.pageX - left) / width) * 100;
-        const y = ((e.pageY - top) / height) * 100;
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+
+        const x = (((e.pageX - scrollX) - left) / width) * 100;
+        const y = (((e.pageY - scrollY) - top) / height) * 100;
         setPosition({ x, y });
-        setCursorPosition({ x: e.pageX - left, y: e.pageY - top })
+        setCursorPosition({ x: (e.pageX - scrollX) - (left * 0.35) , y: (e.pageY - scrollY) - (top * 0.35) })
     }
 
     return (
@@ -24,13 +27,13 @@ const ImageMagnifier = ({ url }) => {
             }}
             onMouseMove={handleMouseHover}
         >
-            <img className='magnifier-img' src={url} alt="" />
+            <img className='magnifier-img' src={url} alt=""  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {show &&
                 <div
                     style={{
                         position: 'absolute',
-                        left: `${cursorPosition.x - 80}px`,
-                        top: `${cursorPosition.y - 80}px`,
+                        left: `${cursorPosition.x}px`,
+                        top: `${cursorPosition.y}px`,
                         pointerEvents: 'none'
                     }}
                 >

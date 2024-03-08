@@ -4,7 +4,7 @@ import moment from 'moment';
 import { Player } from "@lottiefiles/react-lottie-player";
 
 import Button from '@mui/material/Button';
-import Dialog, { DialogProps } from '@mui/material/Dialog';
+import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -35,7 +35,6 @@ export default function EditModal(props) {
     const [previewImage, setPreviewImage] = useState(null);
     const [openImagePreview, setOpenImagePreview] = useState(false);
     const [eventType, setEventType] = useState(eventTypes[0])
-    const [isBalk, setIsBalk] = useState(false);
     const [selectedItemIds, setSelectedItemIds] = useState(null);
     const elementRef = useRef(null);
 
@@ -49,8 +48,8 @@ export default function EditModal(props) {
     }
 
     let tableItems = [...props.editData];
-
-    let selectedItemIndexWithData = Object.values(setupSelected).findIndex(d => !!d.IMAGE_URL);
+    
+    let selectedItemIndexWithData = Object.values(setupSelected).findIndex(d => !!d.ENTER_TIMESTAMP);
     let insertIndex = tableItems.map(d => d[selectedItemIndexWithData]).findIndex(data => {
         return data?.ENTER_TIMESTAMP < Object.values(setupSelected)[selectedItemIndexWithData].ENTER_TIMESTAMP
     })
@@ -104,22 +103,29 @@ export default function EditModal(props) {
         setEventType(eventType);
     }
 
+    const handleOutsideClick = (event) => {
+        if (!event.target.closest('.modal-content')) {
+            setOpenImagePreview(false)
+        }
+    };
+
+    const Modal = ({ children }) => {
+        return (
+          <div className="modal" onClick={handleOutsideClick}>
+            <div className="modal-content">
+              {children}
+            </div>
+          </div>
+        );
+      };      
+
     return (
         <React.Fragment>
-            <Dialog
-                open={openImagePreview}
-                onClose={() => setOpenImagePreview(false)}
-                maxWidth={'lg'}
-            >
-                <DialogContent>
-                    {/* <img
-                        style={{ height: 540, width: 960 }}
-                        alt="hehe_image"
-                        src={previewImage}
-                    /> */}
+            {openImagePreview && (
+                <Modal>
                     <ImageMagnifier url={previewImage} />
-                </DialogContent>
-            </Dialog>
+                </Modal>
+            )}
 
             <Dialog
                 open={props.openEditModal}
