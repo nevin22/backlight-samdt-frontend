@@ -92,7 +92,7 @@ export default function EditModal(props) {
     const setEventTypeFunc = (eventType) => {
         // removed selected items for fov which originally does not have a data
         let sceneNames = props.tableColumns.map(d => d.sceneName);
-        let originalDataSceneNames = props?.selectedEditData?.DATA.map(d => d.SCENE_NAME)
+        let originalDataSceneNames = props?.selectedEditData?.DATA.map(d => d.SCENE_NAME);
         let itemsToRemove = sceneNames.filter(d => !originalDataSceneNames.includes(d));
         setSelectedItemIds((items) => {
             itemsToRemove.forEach((scene) => {
