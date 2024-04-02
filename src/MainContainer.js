@@ -97,8 +97,8 @@ function App(props) {
   let showOnlyValidated = (trigger) => {
     if (trigger) {
       setIsListFiltered(true)
-      setFiltered_d(d.filter(data => data.DATA[data.DATA.findIndex(item => (item && item.SCENE_NAME) === "Scene Pull Up Window")].IS_VALIDATED));
-      setPaginated_d(d.filter(data => data.DATA[data.DATA.findIndex(item => (item && item.SCENE_NAME) === "Scene Pull Up Window")].IS_VALIDATED).slice(0, rowsPerPage));
+      setFiltered_d(d.filter(data => data.DATA[0].IS_VALIDATED_FULL_JOURNEY));
+      setPaginated_d(d.filter(data => data.DATA[0].IS_VALIDATED_FULL_JOURNEY).slice(0, rowsPerPage));
     } else {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));
