@@ -3,6 +3,7 @@ import { render } from "react-dom";
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
 import { SliderRail, Handle, Track, Tick } from "./SliderComponents"; // example render components - source below
 import moment from "moment";
+import './slider.css';
 
 const sliderStyle = {
   position: "relative",
@@ -21,7 +22,19 @@ export default function ScrollDialog(props) {
   let [values, setValues] = useState([1, 288]);
   let [scrollingValues, setScrollingValues] = useState([1, 288]) // used for higlighthing selected time
   let [timeWithData, setTimeWithData] = useState([])
+  const [isHovered, setIsHovered] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
+  const handleMouseMove = (e) => {
+    setPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const NumberToTime = (selectedNumber) => {
+    const selectedMinutes = (selectedNumber - 1) * 5;
+    const hours = Math.floor(selectedMinutes / 60) % 12 || 12;
+    const minutes = selectedMinutes % 60;
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes} ${selectedMinutes >= 720 ? 'pm' : 'am'}`;
+  }
   useEffect(() => {
     setValues([1, 288]);
     setScrollingValues([1, 288]);
@@ -37,7 +50,18 @@ export default function ScrollDialog(props) {
   }, [props.originalData])
 
   return (
-    <div style={{ width: "100%", marginRight: 10 }}>
+    <div
+      style={{ width: "100%", marginRight: 10 }}
+      className="slider_cont"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+    >
+      {isHovered &&
+        <div className="popup" style={{ top: position.y - 180, left: position.x, zIndex: 1000000 }}>
+          {NumberToTime(values[0])} - {NumberToTime(values[1])}
+        </div>
+      }
       <Slider
         mode={1}
         step={1}

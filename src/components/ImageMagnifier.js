@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ImageMagnifier = ({ url }) => {
     const [show, setShow] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+    const [imageSrc, setImageSrc] = useState('');
 
     const handleMouseHover = (e) => {
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -16,9 +17,25 @@ const ImageMagnifier = ({ url }) => {
         setCursorPosition({ x: (e.pageX - scrollX) - (left * 0.35) , y: (e.pageY - scrollY) - (top * 0.35) })
     }
 
+    useEffect(() => { // this will allow magnifier image to display properly regardless of the image content-type
+        const fetchImage = async () => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const objectURL = URL.createObjectURL(blob);
+                setImageSrc(objectURL);
+            } catch (error) {
+                console.error('Error fetching the image:', error);
+            }
+        };
+
+        fetchImage();
+    }, [url]);
+
+
     return (
         <div
-            className='magnifier-img-container'
+            // className='img-magnifier-container'
             onMouseEnter={() => {
                 setShow(true)
             }}
@@ -40,7 +57,7 @@ const ImageMagnifier = ({ url }) => {
                     <div
                         className='magnifier-image'
                         style={{
-                            backgroundImage: `url(${url})`,
+                            backgroundImage: `url(${imageSrc})`,
                             backgroundPosition: `${position.x}% ${position.y}% `
                         }}
                     />

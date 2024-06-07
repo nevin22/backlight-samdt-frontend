@@ -63,10 +63,6 @@ display: none;
 }
 
 
-.img-magnifier-container {
-    position: relative;
-}
-
 .magnifier-img {
     width: 960px;
     height: 540px;
@@ -75,7 +71,10 @@ display: none;
 .magnifier-image {
     width: 200px;
     height: 200px;
+    background-size: '200%';
+    background-repeat: no-repeat;
     border: 2px solid #fff;
+    z-index: 100000000000;
 }
 
 .modal {

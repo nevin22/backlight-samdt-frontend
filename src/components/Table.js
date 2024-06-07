@@ -277,7 +277,6 @@ const formatEditData = (d, selectedData, tableColumns) => {
     })
   })
 
-  console.log('editItemPerFov', editItemPerFov)
   let maxAboveTimeLength = Math.max(...editItemPerFov.map(d => d.aboveSelectedTime?.length).filter(value => value !== undefined));
   let maxBelowTimeLength = Math.max(...editItemPerFov.map(d => d.belowSelectedTime?.length).filter(value => value !== undefined));
 

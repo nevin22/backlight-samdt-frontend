@@ -21,9 +21,17 @@ const backendService = {
             throw error;
         }
     },
-    prepDataForSyncing: async () => {
+    prepDataForSyncing: async (selectedDate) => {
+        const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
+        let payload = selectedDate ? {
+            startTime: (selectedDate && moment(selectedDate).startOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
+            endTime: (selectedDate && moment(selectedDate).endOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
+        } : {}
+
         try {
-            const response = await axios.post(`${BASE_URL}/detections/sync_data_to_manifest`);
+            const response = await axios.post(`${BASE_URL}/detections/sync_data_to_manifest`, {
+                body: payload
+            });
             return response.data;
         } catch (error) {
             console.error("Error while syncing:", error);
@@ -61,12 +69,12 @@ const backendService = {
             throw error;
         }
     },
-    invalidateData: async(id) => {
+    invalidateData: async (id) => {
         try {
             const response = axios.post(`${BASE_URL}/detections/invalidate_data`, {
-              body: {
-                journey_id: id,
-              }
+                body: {
+                    journey_id: id,
+                }
             })
             return response.data
         } catch (error) {

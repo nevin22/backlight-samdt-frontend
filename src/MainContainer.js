@@ -57,12 +57,12 @@ function App(props) {
       })
   }
 
-  let syncToManifest = () => {
-    backendService.prepDataForSyncing()
+  let syncToManifest = (syncAll) => {
+    backendService.prepDataForSyncing(syncAll ? null : selectedDate)
       .then(res => {
         setOpenSnackBar(true);
         setSuccessSnackBar(true);
-        fetchData(selectedDate);
+        fetchData(selectedDate, { network: Cookies.get('network'), site: Cookies.get('site') });
       })
       .catch(err => {
         setOpenSnackBar(true);
@@ -175,8 +175,8 @@ function App(props) {
         <AlertDialog
           closeAlert={() => setOpenAlert(false)}
           openAlert={openAlert}
-          contentText={'Proceeding will finalize your validated sessions for syncing in the manifest. Are you certain you wish to continue?'}
-          onProceed={() => syncToManifest()}
+          contentText={'Proceeding will finalize your validated sessions for syncing in the manifest. Please select syncing option.'}
+          onProceed={(syncAll) => syncToManifest(syncAll)}
           title={"Sync to manifest ?"}
         />
 

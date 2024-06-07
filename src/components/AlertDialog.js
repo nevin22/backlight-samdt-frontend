@@ -34,15 +34,26 @@ export default function AlertDialog(props) {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button variant="outlined" onClick={handleClose}>Cancel</Button>
                     <Button
+                        variant="outlined"
                         onClick={() => {
-                            props.onProceed();
+                            props.onProceed(true);
                             handleClose()
                         }}
                         autoFocus
                     >
-                        Proceed
+                        Sync All
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            props.onProceed(false);
+                            handleClose()
+                        }}
+                        autoFocus
+                    >
+                        Sync selected date
                     </Button>
                 </DialogActions>
             </Dialog>
