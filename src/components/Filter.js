@@ -18,13 +18,16 @@ import Slider from './Slider';
 export default function BasicTextFields(props) {
   const [dateValue, onChange] = useState(moment().subtract(1, 'days').startOf('day').toDate());
   const [onlyShowValidated, setOnlyShowValidated] = useState(false);
+  const [onlyShowAbandonment, setOnlyShowAbandonment] = useState(false);
+  const [onlyShowWarmExit, setOnlyShowWarmExit] = useState(false);
+  const [onlyShowBalk, setOnlyShowBalk] = useState(false);
   const [isCalendarOpen, setIsCalenderOpen] = useState(false);
   const [drawerIsOpen, setDrawerIsOpen] = useState(!(!!Cookies.get('network') && !!Cookies.get('site')));
 
   const [selectedNetwork, setNetwork] = useState(Cookies.get('network') || '');
   const [selectedSite, setSite] = useState(Cookies.get('site') || '');
   const [optionNetworks, setOptionNetworks] = useState([]);
-  const [optionSites, setOptionSites] = useState(!!Cookies.get('site') ? [Cookies.get('site')]: []);
+  const [optionSites, setOptionSites] = useState(!!Cookies.get('site') ? [Cookies.get('site')] : []);
 
   let debounce_timer = null;
   const [dateChangeIndicator, setDateChangeIndicator] = useState(1);
@@ -40,7 +43,33 @@ export default function BasicTextFields(props) {
   const toggleValidatedFilter = () => {
     props.showOnlyValidated(!onlyShowValidated)
     setOnlyShowValidated(!onlyShowValidated);
+    setOnlyShowAbandonment(false);
+    setOnlyShowWarmExit(false);
+    setOnlyShowBalk(false);
+  }
 
+  const toggleAbandonmentFilter = () => {
+    props.showOnlyAbandonment(!onlyShowAbandonment)
+    setOnlyShowAbandonment(!onlyShowAbandonment);
+    setOnlyShowValidated(false);
+    setOnlyShowWarmExit(false);
+    setOnlyShowBalk(false);
+  }
+
+  const toggleWarmExitFilter = () => {
+    props.showOnlyWarmExit(!onlyShowWarmExit)
+    setOnlyShowWarmExit(!onlyShowWarmExit);
+    setOnlyShowAbandonment(false);
+    setOnlyShowValidated(false);
+    setOnlyShowBalk(false);
+  }
+
+  const toggleBalkFilter = () => {
+    props.showOnlyBalk(!onlyShowBalk)
+    setOnlyShowBalk(!onlyShowBalk);
+    setOnlyShowAbandonment(false);
+    setOnlyShowValidated(false);
+    setOnlyShowWarmExit(false);
   }
 
   return (
@@ -69,10 +98,25 @@ export default function BasicTextFields(props) {
         <span style={{ fontWeight: 'normal', fontSize: 14, marginLeft: 5 }}>{props.origignalResultsCount} total result{props.origignalResultsCount > 1 ? 's' : ''}</span>
 
         <div style={{ display: 'flex', fontWeight: 'bold', fontFamily: "Nunito", alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <Checkbox size="small" checked={onlyShowValidated} onChange={() => toggleValidatedFilter()} style={{ marginLeft: -10 }} />
-            <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Only show validated</span>
+          <div style={{ display: 'flex' }}>
+            <div>
+              <Checkbox size="small" checked={onlyShowValidated} onChange={() => toggleValidatedFilter()} style={{ marginLeft: -10 }} />
+              <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Show Validated</span>
+            </div>
+            <div>
+              <Checkbox size="small" checked={onlyShowWarmExit} onChange={() => toggleWarmExitFilter()} style={{ marginLeft: 10 }} />
+              <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Show Warm Exit</span>
+            </div>
+            <div>
+              <Checkbox size="small" checked={onlyShowBalk} onChange={() => toggleBalkFilter()} style={{ marginLeft: 10 }} />
+              <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Show Balk</span>
+            </div>
+            <div>
+              <Checkbox size="small" checked={onlyShowAbandonment} onChange={() => toggleAbandonmentFilter()} style={{ marginLeft: 10 }} />
+              <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>Show Abandonment</span>
+            </div>
           </div>
+
           <Button
             style={{ fontFamily: 'Nunito', marginBottom: 10 }}
             variant="contained"
@@ -100,6 +144,14 @@ export default function BasicTextFields(props) {
           {props.hasFilter &&
             <span style={{ fontWeight: 'normal', fontSize: 14, marginLeft: 10 }}>{props.resultsCount} filtered result/s</span>
           }
+          <Button
+            style={{ fontFamily: 'Nunito', marginLeft: 20 }}
+            variant="contained"
+            size="small"
+          onClick={() => props.setOpenAlert(true)}
+          >
+            Sync to manifest
+          </Button>
         </div>
 
         {props.hasData &&

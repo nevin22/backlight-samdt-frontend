@@ -33,6 +33,7 @@ export default function EditModal(props) {
     ]
     const [scroll, setScroll] = useState('paper');
     const [previewImage, setPreviewImage] = useState(null);
+    const [previewBbox, setPreviewBbox] = useState([])
     const [openImagePreview, setOpenImagePreview] = useState(false);
     const [eventType, setEventType] = useState(eventTypes[0])
     const [selectedItemIds, setSelectedItemIds] = useState(null);
@@ -111,19 +112,32 @@ export default function EditModal(props) {
 
     const Modal = ({ children }) => {
         return (
-          <div className="modal" onClick={handleOutsideClick}>
+        <div className="modal" onClick={handleOutsideClick}>
             <div className="modal-content">
-              {children}
+            {children}
             </div>
-          </div>
+        </div>
         );
-      };      
+    };      
 
+    let flattenedItemsList = tableItems.map(obj => Object.values(obj)).flat().filter(Boolean); // filter boolean removes undefined
+    const getSimilarityBase = (sid, tableColumns) => {
+        let val = undefined;
+        for(let x = 0; x <= tableColumns.length; x++) {
+            if (sid && sid[tableColumns[x]?.sceneName]) {
+                val = sid && sid[tableColumns[x]?.sceneName];
+                break;
+            }
+        }
+        return flattenedItemsList.find(d => d.SMALL_CIRCLE_ID === val)
+    }
+    
+    let similarityBase = getSimilarityBase(selectedItemIds, props.tableColumns);
     return (
         <React.Fragment>
             {openImagePreview && (
                 <Modal>
-                    <ImageMagnifier url={previewImage} />
+                    <ImageMagnifier url={previewImage} bbox={previewBbox} />
                 </Modal>
             )}
 
@@ -200,7 +214,8 @@ export default function EditModal(props) {
                                                             } else if (eventType === eventTypes[2]) {
                                                                 select_disabled = tIndex === 0;
                                                             }
-
+                                                            let isItemSelected = !!selectedItemIds && selectedItemIds[`${rowData?.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID;
+                                                            let hasSimilarAttribute = similarityBase?.ATTRIBUTES?.color !== undefined && (rowData?.ATTRIBUTES?.color === similarityBase?.ATTRIBUTES?.color);
                                                             return (
                                                                 <TableCell
                                                                     key={tIndex}
@@ -211,12 +226,15 @@ export default function EditModal(props) {
                                                                     {rowData &&
                                                                         <>
                                                                             <div style={{ position: 'relative' }}>
+                                                                                <div className={`${!isItemSelected && hasSimilarAttribute ? 'similarity_indicator' : ''}`} />
                                                                                 <img
+                                                                                    col={rowData?.ATTRIBUTES?.color || 'none'}
                                                                                     onClick={(props.isValidating || !rowData.IMAGE_URL || select_disabled) ? () => { } : () => {
                                                                                         return handleSelect(rowData?.SMALL_CIRCLE_ID, rowData.SCENE_NAME)
                                                                                     }}
                                                                                     alt={`${rowData.sceneName}_image`}
-                                                                                    className={`samdt_img ${(imageUrl) ? 'click_icon' : ''} ${selectedItemIds[`${rowData.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID ? 'glowing' : ''}`}
+                                                                                    s_id = {`${rowData.SMALL_CIRCLE_ID}`}
+                                                                                    className={`samdt_img ${(imageUrl) ? 'click_icon' : ''} ${isItemSelected ? 'glowing' : ''}`}
                                                                                     style={{ opacity: select_disabled ? '65%' : '100%' }}
                                                                                     src={imageUrl}
                                                                                 />
@@ -224,7 +242,8 @@ export default function EditModal(props) {
                                                                                     <VisibilityIcon
                                                                                         onClick={() => {
                                                                                             setOpenImagePreview(true);
-                                                                                            setPreviewImage(imageUrl)
+                                                                                            setPreviewImage(imageUrl);
+                                                                                            setPreviewBbox(rowData.BBOX);
                                                                                         }}
                                                                                         style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                                     />

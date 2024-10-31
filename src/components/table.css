@@ -14,6 +14,13 @@
     height: auto;
 }
 
+.similarity_indicator {
+    width: 8px;
+    background-color: #4E95F5;
+    height: 97%;
+    position: absolute;
+}
+
 .search-container {
     position: relative;
     display: inline-block;
@@ -39,7 +46,7 @@
 
 .click_icon {
     cursor: pointer;
-    border: 4px solid white;
+    /* border: 4px solid white; */
 }
 
 .glowing {
@@ -65,7 +72,7 @@ display: none;
 
 .magnifier-img {
     width: 960px;
-    height: 540px;
+    height: 550px;
 }
 
 .magnifier-image {

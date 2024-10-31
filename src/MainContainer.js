@@ -12,7 +12,7 @@ import Config from './config';
 import Filter from "./components/Filter";
 import Table from "./components/Table";
 import LoadingAnimation from './assets/lottie/lf30_xhjuaccs.json';
-import AlertDialog from "./components/AlertDialog";
+import AlertDialog from "./components/AlertDialog2";
 import Snackbar from "./components/SnackBar";
 import Button from '@mui/material/Button';
 
@@ -105,6 +105,39 @@ function App(props) {
     }
   }
 
+  let showOnlyAbandonment = (trigger) => {
+    if (trigger) {
+      setIsListFiltered(true)
+      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Abandon'));
+      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Abandon').slice(0, rowsPerPage));
+    } else {
+      setIsListFiltered(false)
+      setPaginated_d(d.slice(0, rowsPerPage));
+    }
+  }
+
+  let showOnlyWarmExit = (trigger) => {
+    if (trigger) {
+      setIsListFiltered(true)
+      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Warm Exit'));
+      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Warm Exit').slice(0, rowsPerPage));
+    } else {
+      setIsListFiltered(false)
+      setPaginated_d(d.slice(0, rowsPerPage));
+    }
+  }
+
+  let showOnlyBalk = (trigger) => {
+    if (trigger) {
+      setIsListFiltered(true)
+      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Balk'));
+      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Balk').slice(0, rowsPerPage));
+    } else {
+      setIsListFiltered(false)
+      setPaginated_d(d.slice(0, rowsPerPage));
+    }
+  }
+
   let filterViaSlider = (min, max) => {
     let slider_d = d.filter(d2 => {
       let index_with_data = d2.DATA.filter(d3 => d3.NO_DATA !== true).map(d4 => parseInt(d4.ORDER_INDEX))
@@ -152,14 +185,14 @@ function App(props) {
 
   return (
     <>
-      <Button
-        style={{ fontFamily: 'Nunito', position: 'fixed', bottom: 30, right: 30, zIndex: 100 }}
+      {/* <Button
+        style={{ fontFamily: 'Nunito', position: 'fixed', top: 60, right: -1650, zIndex: 1000000000000 }} //, position: 'fixed'
         variant="contained"
         size="small"
         onClick={() => setOpenAlert(true)}
       >
         Sync to manifest
-      </Button>
+      </Button> */}
       <div style={{ position: 'relative' }}>
         <link
           rel="stylesheet"
@@ -199,8 +232,12 @@ function App(props) {
               selectedDate={selectedDate}
               hasFilter={isListFiltered}
               showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
+              showOnlyAbandonment={(trigger) => showOnlyAbandonment(trigger)}
+              showOnlyWarmExit={(trigger) => showOnlyWarmExit(trigger)}
+              showOnlyBalk={(trigger) => showOnlyBalk(trigger)}
               hasData={d.length > 0}
               filterViaSlider={(min, max) => filterViaSlider(min, max)}
+              setOpenAlert={() => setOpenAlert(true)}
             />
 
             {fetching &&
