@@ -33,7 +33,8 @@ export default function EditModal(props) {
     ]
     const [scroll, setScroll] = useState('paper');
     const [previewImage, setPreviewImage] = useState(null);
-    const [previewBbox, setPreviewBbox] = useState([])
+    const [previewBbox, setPreviewBbox] = useState([]);
+    const [previewBboxFinal, setPreviewBboxFinal] = useState([])
     const [openImagePreview, setOpenImagePreview] = useState(false);
     const [eventType, setEventType] = useState(eventTypes[0])
     const [selectedItemIds, setSelectedItemIds] = useState(null);
@@ -137,7 +138,7 @@ export default function EditModal(props) {
         <React.Fragment>
             {openImagePreview && (
                 <Modal>
-                    <ImageMagnifier url={previewImage} bbox={previewBbox} />
+                    <ImageMagnifier url={previewImage} bbox={previewBbox} finalBbox={previewBboxFinal} />
                 </Modal>
             )}
 
@@ -203,6 +204,7 @@ export default function EditModal(props) {
                                                     >
                                                         {props.tableColumns.map((tableC, tIndex) => {
                                                             let rowData = row.find((d => (d && d.SCENE_NAME) === tableC.sceneName));
+                                                            let final_bbox = rowData?.FINAL_BBOX;
                                                             let imageUrl = rowData ? (rowData.defaultSelected ? (rowData.VALIDATED_IMAGE_URL || rowData.IMAGE_URL || default_image) : rowData.IMAGE_URL) : default_image;
                                                             let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
                                                             let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
@@ -244,6 +246,7 @@ export default function EditModal(props) {
                                                                                             setOpenImagePreview(true);
                                                                                             setPreviewImage(imageUrl);
                                                                                             setPreviewBbox(rowData.BBOX);
+                                                                                            setPreviewBboxFinal(final_bbox)
                                                                                         }}
                                                                                         style={{ color: 'white', position: 'absolute', top: 10, left: 10 }}
                                                                                     />

@@ -36,7 +36,8 @@ export default function ScrollDialog(props) {
     return `${hours}:${minutes < 10 ? '0' : ''}${minutes} ${selectedMinutes >= 720 ? 'pm' : 'am'}`;
   }
   useEffect(() => {
-    setValues([1, 288]);
+    // setValues([1, 288]);
+    setValues(props.sliderPrevValues)
     setScrollingValues([1, 288]);
   }, [props.dateChangeIndicator])
 
@@ -51,14 +52,14 @@ export default function ScrollDialog(props) {
 
   return (
     <div
-      style={{ width: "100%", marginRight: 10 }}
+      style={{ width: props.customWidth || "100%", marginRight: 10, top: props.customTop || '0px' }}
       className="slider_cont"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
     >
       {isHovered &&
-        <div className="popup" style={{ top: position.y - 180, left: position.x, zIndex: 1000000 }}>
+        <div className="popup" style={{ top: position.y - 150, left: position.x, zIndex: 1000000 }}>
           {NumberToTime(values[0])} - {NumberToTime(values[1])}
         </div>
       }
@@ -86,6 +87,7 @@ export default function ScrollDialog(props) {
           props.filterViaSlider(minDate.format('YYYY-MM-DD HH:mm:ss.SSS'), maxDate.format('YYYY-MM-DD HH:mm:ss.SSS'))
 
           setValues(val)
+          props.setSliderPrevValues(val)
         }}
         values={values}
       >
@@ -116,29 +118,31 @@ export default function ScrollDialog(props) {
                   target={target}
                   getTrackProps={getTrackProps}
                 />
-              ))}
+              ))
+              }
             </div>
           )}
         </Tracks>
-        <Ticks count={288}>
-          {({ ticks }) => (
-            <div className="slider-ticks">
-              {ticks.map((tick, index) => {
-                return (
-                  <Tick
-                    key={tick.id}
-                    tick={tick}
-                    count={ticks.length}
-                    divider={12}
-                    showLine={timeWithData.includes(tick.value)}
-                    highlightLine={tick.value > scrollingValues[0] && tick.value < scrollingValues[1]}
-                    lastItem={index === (ticks.length - 1)}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </Ticks>
+          <Ticks count={288}>
+            {({ ticks }) => (
+              <div className="slider-ticks">
+                {ticks.map((tick, index) => {
+                  return (
+                    <Tick
+                      noNumberIndicator={props.noNumberIndicator}
+                      key={tick.id}
+                      tick={tick}
+                      count={ticks.length}
+                      divider={12}
+                      showLine={timeWithData.includes(tick.value)}
+                      highlightLine={tick.value > props.sliderPrevValues[0] && tick.value < props.sliderPrevValues[1]}
+                      lastItem={index === (ticks.length - 1)}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </Ticks>
       </Slider>
     </div>
   );

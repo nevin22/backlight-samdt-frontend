@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import ImageMapper from 'react-img-mapper';
 
-const ImageMagnifier = ({ url, bbox }) => {
+const ImageMagnifier = ({ url, bbox, finalBbox }) => {
+    let fixedFinalBbox = !!finalBbox ? Object.values(finalBbox) : []
     const [show, setShow] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
@@ -15,6 +16,20 @@ const ImageMagnifier = ({ url, bbox }) => {
                 shape: "rect",
                 strokeColor: "rgba(0, 230, 64, 1)",
                 coords: [
+                    fixedFinalBbox[0] * 960,
+                    fixedFinalBbox[1] * 550,
+                    fixedFinalBbox[2] * 960,
+                    fixedFinalBbox[3] * 550,
+                ],
+                preFillColor: "rgba(76, 175, 80, 0.1)",
+                lineWidth: 2,
+                disabled: true
+            },
+            {
+                name: `2`,
+                shape: "rect",
+                strokeColor: "red",
+                coords: [
                     bbox[0] * 960,
                     bbox[1] * 550,
                     bbox[2] * 960,
@@ -23,7 +38,8 @@ const ImageMagnifier = ({ url, bbox }) => {
                 preFillColor: "rgba(76, 175, 80, 0.1)",
                 lineWidth: 2,
                 disabled: true
-            },],
+            },
+        ],
     };
 
     const handleMouseHover = (e) => {

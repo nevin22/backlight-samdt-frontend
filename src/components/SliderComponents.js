@@ -70,12 +70,16 @@ export function Handle({
         aria-valuemax={max}
         aria-valuenow={value}
         style={{
-          left: `${percent}%`,
+          left: `${percent - 0.2}%`,
           position: "absolute",
           transform: "translate(0%, 0%)",
           zIndex: 2,
+          borderTopRightRadius: id === '$$-0' ? 0 : 5,
+          borderTopLeftRadius: id === '$$-0' ? 5 : 0,
+          borderBottomRightRadius: id === '$$-0' ? 0 : 5,
+          borderBottomLeftRadius: id === '$$-0' ? 5 : 0,
           width: 5,
-          height: 66,
+          height: 64,
           backgroundColor: disabled ? "#666" : "#4E95F5"
         }}
       />
@@ -189,7 +193,7 @@ Track.defaultProps = {
 // *******************************************************
 // TICK COMPONENT
 // *******************************************************
-export function Tick({ tick, count, format, divider, showLine, highlightLine }) {
+export function Tick({ tick, count, format, divider, showLine, highlightLine, noNumberIndicator }) {
   return (
     <div>
       {showLine &&
@@ -216,7 +220,7 @@ export function Tick({ tick, count, format, divider, showLine, highlightLine }) 
           left: `${tick.percent}%`
         }}
       >
-        {format(tick.value / divider)}
+        {noNumberIndicator !== true ? format(tick.value / divider) : ''}
       </div>}
 
     </div>

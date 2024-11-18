@@ -1,21 +1,23 @@
 import React from 'react';
 import { useEffect, useState } from "react";
 import moment from 'moment';
-import axios from "axios";
-
 import backendService from '../services/backendService';
 
+import Popover from '@mui/material/Popover';
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import BeenhereIcon from '@mui/icons-material/Beenhere';
 import TableContainer from "@mui/material/TableContainer";
+import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import TableRow from "@mui/material/TableRow";
 import ErrorIcon from '@mui/icons-material/Error';
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 
 import default_image from '../assets/no_image.jpg';
+import IconPublished from '../assets/icons/icon-published.svg'
 import EditModal from './EditModal';
 import AlertDialog from "./AlertDialog";
 
@@ -56,7 +58,7 @@ export default function BasicTable(props) {
     backendService.validateData(ids, eventType, selectedEditData)
       .then(res => {
         setIsValidating(false);
-        props.updateEditedItem(res.updatedData)
+        props.updateEditedItem(res.updatedData, true)
         props.openSnackBar({ success: true })
         closeModal();
       })
@@ -83,9 +85,11 @@ export default function BasicTable(props) {
             .then(res => {
               setOpenAlert(false)
               setIdToInvalidate('');
-              setTimeout(() => {
-                window.location.reload();
-              }, 300)
+              props.updateEditedItem(res.updatedData, false)
+              props.openSnackBar({ success: true })
+              // setTimeout(() => {
+              //   window.location.reload();
+              // }, 300)
             })
             .catch(err => {
               console.log('errr', err);
@@ -138,6 +142,15 @@ const CustomTableRow = (props) => {
   let isValidated = rowItems.find(d => d.IS_VALIDATED_FULL_JOURNEY);
   let eventType = rowItems[0].BA_TYPE;
 
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const open = Boolean(anchorEl);
+  const id = open ? `simple-popover ${columnLength}` : undefined;
 
   let rowComponents = [];
   for (let i = 0; i <= columnLength - 1; i++) {
@@ -187,73 +200,129 @@ const CustomTableRow = (props) => {
     <React.Fragment key={props.propKey}>
       <TableRow key={props.propKey}
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ backgroundColor: isValidated ? '#81bffc' : '' }}
+        style={{ backgroundColor: isValidated ? '#DAECFF' : '' }}
       >
         <TableCell
           colSpan={columnLength}
           style={{ fontFamily: "Nunito", fontSize: 18, fontWeight: "bold", borderBottom: 0, paddingBottom: 0 }}
           align="left"
         >
-          <span style={{ display: 'flex', alignItems: 'center' }}>
-            <span
-              style={{ cursor: forPublish ? '' : 'pointer', userSelect: forPublish ? 'none' : '' }}
-              onClick={() => {
-                return !forPublish && props.openEditModal({
-                  ...props.row,
-                  DATA: props.row.DATA.filter(d => !d.NO_DATA)
-                })
-              }}>
-              {props.index + 1} Session {props.row.JOURNEY_ID}
-            </span>
-            {isValidated &&
-              <>
-                <BeenhereIcon style={{ color: '#1976D2', height: 15, paddingLeft: 15 }} />
-                <span
-                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
-                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className='flex items-center'>
+              <span
+                style={{ cursor: forPublish ? '' : 'pointer' }}
+                className='mr-2'
+                onClick={() => {
+                  return !forPublish && props.openEditModal({
+                    ...props.row,
+                    DATA: props.row.DATA.filter(d => !d.NO_DATA)
+                  })
+                }}>
+                {props.index + 1} Session {props.row.JOURNEY_ID}
+              </span>
+              {isValidated && !forPublish &&
+                <>
+                  <BeenhereIcon style={{ color: '#1976D2', fontSize: 12 }} className='ml-4' />
+                  <span
+                    // onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
+                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
+                    className='px-1'
+                  >
+                    VALIDATED
+                  </span>
+                </>
+              }
+
+              {forPublish &&
+                <div className='flex items-center ml-4'>
+                  <img
+                    style={{ height: 16 }}
+                    alt="samdt_image"
+                    src={IconPublished}
+                  />
+                  <span style={{ fontFamily: 'Nunito', color: '#028F68', fontSize: 14, paddingLeft: 5 }}>PUBLISHED</span>
+                </div>
+              }
+
+              {eventType === 'Warm Exit' && isValidated &&
+                <>
+                  <span
+                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#4988CF', fontSize: 10, border: 'solid #4988CF 2px', borderRadius: 5 }}
+                    className='ml-4 px-1'
+                  >
+                    Warm Exit
+                  </span>
+                </>
+              }
+
+              {eventType === 'Balk' &&
+                <>
+                  <span
+                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#EBAE43', fontSize: 10, border: 'solid #EBAE43 2px', borderRadius: 5 }}
+                    className='ml-4 px-1'
+                  >
+                    BALK
+                  </span>
+                </>
+              }
+
+              {eventType === 'Abandon' &&
+                <>
+                  <span
+                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#D83231', fontSize: 10, border: 'solid #D83231 2px', borderRadius: 5 }}
+                    className='ml-4 px-1'
+                  >
+                    BALK
+                  </span>
+                </>
+              }
+
+            </div>
+            {isValidated && !forPublish &&
+              <div>
+                <MoreHorizIcon onClick={handleClick} />
+                <Popover
+                  id={id}
+                  open={open}
+                  anchorEl={anchorEl}
+                  onClose={handleClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
                 >
-                  VALIDATED
-                </span>
-              </>
+                  <div className='py-1'>
+                    <div
+                      className='flex items-center pl-2'
+                      style={{ fontSize: 14, height: 30, width: 150, backgroundColor: '#D21716', color: 'white' }}
+                      onClick={() => {
+                        if (forPublish) {
+                          alert('Cannot invalidate for publish sessions.')
+                        } else {
+                          props.setIdToInvalidate(props.row.JOURNEY_ID);
+                        }
+
+                        handleClose()
+                      }}
+                    >
+                      Invalidate Session
+                    </div>
+                  </div>
+                </Popover>
+              </div>
             }
 
-            {eventType === 'Balk' &&
-              <>
-                <BeenhereIcon style={{ color: '#6B0000', height: 15, paddingLeft: 15 }} />
-                <span
-                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
-                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#6B0000', fontSize: 14 }}
-                >
-                  BALK
-                </span>
-              </>
-            }
-
-            {eventType === 'Abandon' &&
-              <>
-                <BeenhereIcon style={{ color: '#6B0000', height: 15, paddingLeft: 15 }} />
-                <span
-                  onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
-                  style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#6B0000', fontSize: 14 }}
-                >
-                  ABANDON
-                </span>
-              </>
-            }
-
-            {forPublish &&
-              <>
-                <BeenhereIcon style={{ color: 'white', height: 15, paddingLeft: 15 }} />
-                <span style={{ fontFamily: 'Nunito', color: 'white', fontSize: 14 }}>FOR PUBLISH</span>
-              </>
-            }
-          </span>
+          </div>
         </TableCell>
       </TableRow>
 
       <StyledTableRow
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ borderTop: 0, backgroundColor: isValidated ? '#81bffc' : '' }}
+        style={{ borderTop: 0, backgroundColor: isValidated ? '#DAECFF' : '' }}
       >
         {rowComponents}
       </StyledTableRow>

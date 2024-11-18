@@ -22,10 +22,11 @@ export default function AlertDialog(props) {
             <Dialog
                 open={props.openAlert}
                 onClose={handleClose}
+                maxWidth="sm"
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description"
             >
-                <DialogTitle id="alert-dialog-title">
+                <DialogTitle id="alert-dialog-title" style={{ fontWeight: 'bold' }}>
                     {props.title}
                 </DialogTitle>
                 <DialogContent>
@@ -34,26 +35,30 @@ export default function AlertDialog(props) {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="outlined" onClick={handleClose}>Cancel</Button>
                     <Button
-                        variant="outlined"
-                        onClick={() => {
-                            props.onProceed(true);
-                            handleClose()
+                        variant="contained"
+                        onClick={handleClose}
+                        sx={{
+                            backgroundColor: '#F0F3F5',
+                            color: 'black',
+                            '&:hover': {
+                                backgroundColor: '#F0F3F5',
+                            },
                         }}
-                        autoFocus
                     >
-                        Sync All
+                        Cancel
                     </Button>
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         onClick={() => {
-                            props.onProceed(false);
+                            props.onProceed(props.publishAll);
                             handleClose()
                         }}
-                        autoFocus
+                        sx={{
+                            color: 'white`'
+                        }}
                     >
-                        Sync selected date
+                        Proceed
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -71,7 +71,7 @@ const backendService = {
     },
     invalidateData: async (id) => {
         try {
-            const response = axios.post(`${BASE_URL}/detections/invalidate_data`, {
+            const response = await axios.post(`${BASE_URL}/detections/invalidate_data`, {
                 body: {
                     journey_id: id,
                 }
@@ -79,6 +79,24 @@ const backendService = {
             return response.data
         } catch (error) {
             console.error("Error while invalidating data:", error);
+            throw error;
+        }
+    },
+    getNetworks: async () => {
+        try {
+            const response = await axios.get(`${BASE_URL}/detections/get_network_options`)
+            return response.data.data.NETWORKS;
+        } catch (error) {
+            console.log('get networks err - ', error);
+            throw error;
+        }
+    },
+    getSites: async (network) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/detections/get_site_options`, { params: { network } })
+            return response.data.data.SITES;
+        } catch (error) {
+            console.log('get networks err - ', error);
             throw error;
         }
     }

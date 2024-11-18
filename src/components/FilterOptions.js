@@ -1,34 +1,30 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Button from '@mui/material/Button';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Cookies from 'js-cookie';
-import CircularProgress from '@mui/material/CircularProgress';
+
+import CustomDropdown from './CustomDropDown';
+import IconNetwork from '../assets/icons/icon-netwok.svg';
+import IconSite from '../assets/icons/icon-site.svg';
+
+import backendService from '../services/backendService';
 
 export default function BasicSelect(props) {
     const { selectedNetwork, selectedSite, setSite, setNetwork, optionNetworks, setOptionNetworks, optionSites, setOptionSites } = props;
-
     const [loading, setLoading] = useState(true);
-
     const [isLoadingSites, setIsLoadingSites] = useState(false);
 
     useEffect(() => {
-        axios
-            .get(`http://localhost:8080/detections/get_network_options`, {
-            }).then((res) => {
-                setOptionNetworks(res.data.data.NETWORKS);
+        backendService.getNetworks()
+            .then((res) => {
+                setOptionNetworks(res);
                 setLoading(false);
             })
-            .catch((err) => {
+            .catch(err => {
                 setLoading(false);
                 console.log(err)
             })
-            
+
         if (Cookies.get('network')) {
             get_sites(Cookies.get('network'))
         }
@@ -36,98 +32,54 @@ export default function BasicSelect(props) {
 
     const get_sites = (network) => {
         setIsLoadingSites(true)
-        axios
-        .get(`http://localhost:8080/detections/get_site_options`, {
-            params: {
-                network
-            }
-        }).then((res) => {
-            setOptionSites(res.data.data.SITES);
-            setIsLoadingSites(false)
-        })
-        .catch((err) => {
-            setIsLoadingSites(false)
-            console.log('err', err)
-        })
-    }
-    const handleChangeNetwork = (event) => {
-        Cookies.set('network', event.target.value);
-        Cookies.remove('site');
-        setNetwork(event.target.value);
 
-        get_sites(event.target.value);
+        backendService.getSites(network)
+            .then((res) => {
+                setOptionSites(res);
+                setIsLoadingSites(false)
+            })
+            .catch(err => {
+                setIsLoadingSites(false)
+                console.log('err', err)
+            })
+    }
+
+    const handleChangeNetwork = (network) => {
+        setNetwork(network);
+        Cookies.set('network', network);
+        Cookies.set('site', '');
+        setSite('')
+        get_sites(network);
+        
     };
 
-    const handleChangeSite = (event) => {
-        Cookies.set('site', event.target.value);
-        setSite(event.target.value);
+    const handleChangeSite = (site) => {
+        Cookies.set('site', site);
+        setSite(site);
+        props.fetchData();
     };
 
 
     return (
-        <div style={{ padding: 25, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-            <Box sx={{ minWidth: 450 }}>
-                {loading &&
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 250 }}>
-                        <CircularProgress />
-                    </div>
-                }
-                {!loading &&
-                    <React.Fragment>
-                        <FormControl fullWidth style={{ marginTop: 20 }}>
-                            <InputLabel id="network-select-label">Network</InputLabel>
-                            <Select
-                                labelId="network-select-label"
-                                id="network-select"
-                                value={selectedNetwork}
-                                label="Network"
-                                onChange={handleChangeNetwork}
-                            >
-                                {optionNetworks && optionNetworks.map((item, i) => {
-                                    return (
-                                        <MenuItem key={i} value={item}>{item}</MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth style={{ marginTop: 20 }}>
-                            <InputLabel id="site-select-label">Site</InputLabel>
-                            <Select
-                                labelId="site-select-label"
-                                id="site-select"
-                                value={selectedSite}
-                                label="Site"
-                                onChange={handleChangeSite}
-                                disabled={!selectedNetwork || (selectedNetwork && isLoadingSites)}
-                            >
-                                {optionSites && optionSites.map((item, i) => {
-                                    return (
-                                        <MenuItem key={i} value={item}>{item}</MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-                    </React.Fragment>
-                }
-
-            </Box>
-
-            {!loading &&
-                <Button
-                    style={{ fontFamily: 'Nunito', marginBottom: 10 }}
-                    variant="contained"
-                    size="small"
-                    onClick={() => {
-                        props.fetchData();
-                        props.closeDrawer();
-                    }}
-                    disabled={!selectedNetwork || !selectedSite}
-                >
-                    Apply
-                </Button>
-            }
-
+        <div>
+            <div className='flex flex-row justify-center'>
+                <CustomDropdown
+                    defaultText={'Network'}
+                    options={optionNetworks}
+                    customIcon={IconNetwork}
+                    customStyle={{ marginRight: -5 }}
+                    onSelect={(network) => handleChangeNetwork(network)}
+                    defaultOption={selectedNetwork}
+                />
+                < CustomDropdown
+                    defaultText={'Site'}
+                    options={optionSites}
+                    customIcon={IconSite}
+                    customStyle={{ backgroundColor: 'white', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, width: 230 }}
+                    onSelect={(site) => handleChangeSite(site)}
+                    defaultOption={selectedSite}
+                />
+            </div>
         </div>
 
     );

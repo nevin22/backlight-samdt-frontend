@@ -4,22 +4,20 @@
   }
   
   .popup {
-    height: 10px;
-    width: 120px;
+    height: 30px;
+    width: 150px;
     font-size: 12px;
     border-radius: 5px;
     text-align: center;
     display: none;
     font-family: 'Nunito';
     position: absolute;
-    top: -30px; /* Adjust this value to position the popup */
-    left: 50%;
     transform: translateX(-50%);
     background-color: #fff;
     border: 1px solid #ccc;
     padding: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 1;
+    z-index: 10000000;
   }
   
   .slider_cont:hover .popup {

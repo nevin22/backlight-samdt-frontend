@@ -37,6 +37,12 @@
     outline: none;
 }
 
+.search-input::placeholder {
+    color: #CACDD4;
+    font-weight: 100;
+    font-size: 14px;
+  }
+
 .calendar_floater_style {
     position: absolute;
     top: 175px;
@@ -105,4 +111,10 @@ display: none;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* add shadow for depth */
   z-index: 1501; /* ensure modal content is on top of overlay */
+}
+
+
+.filter-border {
+    border: 1px solid #D1D4D9;
+    border-radius: 5px;
 }

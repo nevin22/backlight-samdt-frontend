@@ -25,6 +25,7 @@ function App(props) {
   const [page, setPage] = useState(1);
   const [fetching, setFetching] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
+  const [publishAll, setPublishAll] = useState(false);
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [successSnackBar, setSuccessSnackBar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(moment().subtract(1, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss.SSS'));
@@ -94,15 +95,26 @@ function App(props) {
     }
   }
 
+  let showAllSessionStatus = () => {
+    setIsListFiltered(false)
+    setPaginated_d(d.slice(0, rowsPerPage));
+  }
+
   let showOnlyValidated = (trigger) => {
     if (trigger) {
       setIsListFiltered(true)
-      setFiltered_d(d.filter(data => data.DATA[0].IS_VALIDATED_FULL_JOURNEY));
-      setPaginated_d(d.filter(data => data.DATA[0].IS_VALIDATED_FULL_JOURNEY).slice(0, rowsPerPage));
+      setFiltered_d(d.filter(data => data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)));
+      setPaginated_d(d.filter(data => data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)).slice(0, rowsPerPage));
     } else {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));
     }
+  }
+
+  let showOnlyUnValidated = () => {
+    setIsListFiltered(true)
+    setFiltered_d(d.filter(data => !data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)));
+    setPaginated_d(d.filter(data => !data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)).slice(0, rowsPerPage));
   }
 
   let showOnlyAbandonment = (trigger) => {
@@ -153,11 +165,13 @@ function App(props) {
     setIsListFiltered(true);
   }
 
-  let updateEditedItem = (data) => {
+  let updateEditedItem = (data, updateAfterValidation) => {
     let journey_item = data[0];
     set_d((d) => {
       let d_copy = [...d];
-      let indexOfDataToUpdate = d.findIndex(item => item.JOURNEY_ID === journey_item.VALIDATED_JOURNEY);
+      let indexOfDataToUpdate = d.findIndex(item => {
+        return item.JOURNEY_ID === (updateAfterValidation ? journey_item.VALIDATED_JOURNEY : journey_item.JOURNEY_ID)
+      });
       d_copy[indexOfDataToUpdate].DATA = data;
       return d_copy
     })
@@ -208,9 +222,20 @@ function App(props) {
         <AlertDialog
           closeAlert={() => setOpenAlert(false)}
           openAlert={openAlert}
-          contentText={'Proceeding will finalize your validated sessions for syncing in the manifest. Please select syncing option.'}
+          publishAll={publishAll}
+          contentText={
+            publishAll ?
+              'You are about to publish all validated sessions from all dates. These changes will be permanent, are you sure you want to proceed?'
+              :
+              `You are about to publish all validated sessions within these filtered dates(${moment(selectedDate).format('dddd, MMMM D, YYYY')}). These changes will be permanent, so please ensure that you have reviewed all sessions before proceeding.`
+          }
           onProceed={(syncAll) => syncToManifest(syncAll)}
-          title={"Sync to manifest ?"}
+          title={
+            publishAll ?
+              "Publish All Validated Sessions?"
+              :
+              "Publish Validated Sessions?"
+          }
         />
 
         <div>
@@ -232,12 +257,17 @@ function App(props) {
               selectedDate={selectedDate}
               hasFilter={isListFiltered}
               showOnlyValidated={(trigger) => showOnlyValidated(trigger)}
+              showOnlyUnValidated={() => showOnlyUnValidated()}
+              showAllSessionStatus={() => showAllSessionStatus()}
               showOnlyAbandonment={(trigger) => showOnlyAbandonment(trigger)}
               showOnlyWarmExit={(trigger) => showOnlyWarmExit(trigger)}
               showOnlyBalk={(trigger) => showOnlyBalk(trigger)}
               hasData={d.length > 0}
               filterViaSlider={(min, max) => filterViaSlider(min, max)}
-              setOpenAlert={() => setOpenAlert(true)}
+              setOpenAlert={(bool, isAll) => {
+                setOpenAlert(true);
+                setPublishAll(isAll);
+              }}
             />
 
             {fetching &&
@@ -266,7 +296,7 @@ function App(props) {
                   fetching={fetching}
                   env={env}
                   detectionz={paginated_d}
-                  updateEditedItem={(updateData) => updateEditedItem(updateData)}
+                  updateEditedItem={(updateData, updateAfterValidation) => updateEditedItem(updateData, updateAfterValidation)}
                 />
               </div>
             }
