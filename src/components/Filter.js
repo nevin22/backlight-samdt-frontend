@@ -28,6 +28,7 @@ export default function BasicTextFields(props) {
   const [optionSites, setOptionSites] = useState(!!Cookies.get('site') ? [Cookies.get('site')] : []);
 
   const [sliderPrevValues, setSliderPrevValues] = useState([1, 288]);
+  const [selectedSession, setSelectedSession] = useState("All")
 
   let debounce_timer = null;
   const [dateChangeIndicator, setDateChangeIndicator] = useState(1);
@@ -86,7 +87,6 @@ export default function BasicTextFields(props) {
 
       if (scrollTop > lastScrollTop) {
         // Scrolling Down
-        console.log('scroll down', downCount)
         setDownCount(prev => prev + 1);
         setUpCount(0);
 
@@ -96,7 +96,6 @@ export default function BasicTextFields(props) {
         }
       } else if (scrollTop < lastScrollTop) {
         // Scrolling Up
-        console.log('scroll up', upCount);
         setUpCount(prev => prev + 1);
         setDownCount(0);
 
@@ -206,8 +205,14 @@ export default function BasicTextFields(props) {
 
               <div className="flex">
                 <FilterOptions
-                  setNetwork={(network) => setNetwork(network)}
-                  setSite={(site) => setSite(site)}
+                  setNetwork={(network) => {
+                    setNetwork(network)
+                    setSelectedSession('All')
+                  }}
+                  setSite={(site) => {
+                    setSite(site)
+                    setSelectedSession('All')
+                  }}
                   selectedNetwork={selectedNetwork}
                   selectedSite={selectedSite}
                   optionNetworks={optionNetworks}
@@ -218,10 +223,13 @@ export default function BasicTextFields(props) {
                 />
                 <CustomDropdown
                   defaultText={'Session Status'}
-                  defaultOption={'All'}
+                  defaultOption={selectedSession}
+                  dontShowTextIfOptionIs={'All'}
                   options={['All', 'Validated', 'Unvalidated', 'Warm Exit', 'Balk', 'Abandon']}
-                  onSelect={(selected) => filterViaSessionStatus(selected)}
-                  dontShowDefault={true}
+                  onSelect={(selected) => {
+                    filterViaSessionStatus(selected);
+                    setSelectedSession(selected)
+                  }}
                   customIcon={IconSession}
                   customStyle={{ minWidth: 150, marginLeft: 15 }}
                 />

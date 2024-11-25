@@ -38,14 +38,10 @@ const CustomDropdown = (props) => {
                 <div className='flex'>
                     <img className='pl-1' src={props.customIcon} width={20} alt="Session Icon" />
                     <span
-                        className={`${props.dontShowDefault ? props.defaultOption === selectedOption ? 'italic' : '' : ''} font-light text-sm px-2 mt-0.5 select-none truncate`}
-                        style={{ color: props.dontShowDefault ? props.defaultOption === selectedOption ? '#C2C5CD' : 'black' : 'black', fontFamily: 'sans-serif' }}
+                        className={`${props.dontShowTextIfOptionIs === selectedOption ? 'italic' : '' } font-light text-sm px-2 mt-0.5 select-none truncate`}
+                        style={{ color: props.dontShowTextIfOptionIs === selectedOption ?  '#C2C5CD' : 'black', fontFamily: 'sans-serif' }}
                     >
-                        {props.dontShowDefault ?
-                            props.defaultOption === selectedOption ? props.defaultText : selectedOption
-                            :
-                            selectedOption ? selectedOption : ''
-                        }
+                        { props.dontShowTextIfOptionIs === selectedOption ? props.defaultText : selectedOption }
                     </span>
                 </div>
 

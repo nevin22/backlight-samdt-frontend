@@ -59,13 +59,13 @@ const backendService = {
                 body: {
                     selected_data: selectedEditData,
                     small_circle_ids: ids,
-                    isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED),
+                    // isValidated: !!selectedEditData.DATA.find(d => d.IS_VALIDATED),
                     eventType
                 }
             })
             return response.data;
         } catch (error) {
-            console.error("Error while validating data:", error);
+            console.error("Error while validating data:", error.response.data.message);
             throw error;
         }
     },

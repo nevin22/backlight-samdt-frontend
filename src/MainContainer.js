@@ -120,8 +120,8 @@ function App(props) {
   let showOnlyAbandonment = (trigger) => {
     if (trigger) {
       setIsListFiltered(true)
-      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Abandon'));
-      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Abandon').slice(0, rowsPerPage));
+      setFiltered_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Abandon') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)));
+      setPaginated_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Abandon') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)).slice(0, rowsPerPage));
     } else {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));
@@ -131,8 +131,8 @@ function App(props) {
   let showOnlyWarmExit = (trigger) => {
     if (trigger) {
       setIsListFiltered(true)
-      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Warm Exit'));
-      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Warm Exit').slice(0, rowsPerPage));
+      setFiltered_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Warm Exit') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)));
+      setPaginated_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Warm Exit') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)).slice(0, rowsPerPage));
     } else {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));
@@ -142,8 +142,8 @@ function App(props) {
   let showOnlyBalk = (trigger) => {
     if (trigger) {
       setIsListFiltered(true)
-      setFiltered_d(d.filter(data => data.DATA[0].BA_TYPE === 'Balk'));
-      setPaginated_d(d.filter(data => data.DATA[0].BA_TYPE === 'Balk').slice(0, rowsPerPage));
+      setFiltered_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Balk') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)));
+      setPaginated_d(d.filter(data => data.DATA.some(item => item.BA_TYPE === 'Balk') && data.DATA.some(item => item.IS_VALIDATED_FULL_JOURNEY)).slice(0, rowsPerPage));
     } else {
       setIsListFiltered(false)
       setPaginated_d(d.slice(0, rowsPerPage));

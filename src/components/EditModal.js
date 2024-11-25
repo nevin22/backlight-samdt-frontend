@@ -18,7 +18,8 @@ import LinearProgress from '@mui/material/LinearProgress';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Checkbox from '@mui/material/Checkbox';
 import Paper from "@mui/material/Paper";
-
+import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag';
+import IconTime from '../assets/icons/icon-time-black.svg'
 import ImageMagnifier from './ImageMagnifier';
 
 import LoadingAnimation from '../assets/lottie/lf30_xhjuaccs.json';
@@ -50,7 +51,7 @@ export default function EditModal(props) {
     }
 
     let tableItems = [...props.editData];
-    
+
     let selectedItemIndexWithData = Object.values(setupSelected).findIndex(d => !!d.ENTER_TIMESTAMP);
     let insertIndex = tableItems.map(d => d[selectedItemIndexWithData]).findIndex(data => {
         return data?.ENTER_TIMESTAMP < Object.values(setupSelected)[selectedItemIndexWithData].ENTER_TIMESTAMP
@@ -113,18 +114,18 @@ export default function EditModal(props) {
 
     const Modal = ({ children }) => {
         return (
-        <div className="modal" onClick={handleOutsideClick}>
-            <div className="modal-content">
-            {children}
+            <div className="modal" onClick={handleOutsideClick}>
+                <div className="modal-content">
+                    {children}
+                </div>
             </div>
-        </div>
         );
-    };      
+    };
 
     let flattenedItemsList = tableItems.map(obj => Object.values(obj)).flat().filter(Boolean); // filter boolean removes undefined
     const getSimilarityBase = (sid, tableColumns) => {
         let val = undefined;
-        for(let x = 0; x <= tableColumns.length; x++) {
+        for (let x = 0; x <= tableColumns.length; x++) {
             if (sid && sid[tableColumns[x]?.sceneName]) {
                 val = sid && sid[tableColumns[x]?.sceneName];
                 break;
@@ -132,7 +133,7 @@ export default function EditModal(props) {
         }
         return flattenedItemsList.find(d => d.SMALL_CIRCLE_ID === val)
     }
-    
+
     let similarityBase = getSimilarityBase(selectedItemIds, props.tableColumns);
     return (
         <React.Fragment>
@@ -197,7 +198,7 @@ export default function EditModal(props) {
                                             return (
                                                 <React.Fragment key={index}>
                                                     <TableRow
-                                                        key={ index}
+                                                        key={index}
                                                         ref={index === (insertPoint - 1) ? elementRef : null}
                                                         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                                                         style={{ borderTop: 0 }}
@@ -209,6 +210,7 @@ export default function EditModal(props) {
                                                             let enterTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_ENTER_TIMESTAMP || rowData.ENTER_TIMESTAMP) : rowData.ENTER_TIMESTAMP);
                                                             let exitTimestamp = rowData && (rowData.defaultSelected ? (rowData.VALIDATED_EXIT_TIMESTAMP || rowData.EXIT_TIMESTAMP) : rowData.EXIT_TIMESTAMP);
 
+
                                                             let originalData = props?.selectedEditData?.DATA;
                                                             let select_disabled = false;
                                                             if ((eventType === eventTypes[1]) && !originalData.find(d => d.SCENE_NAME === tableC.sceneName)) {
@@ -218,6 +220,16 @@ export default function EditModal(props) {
                                                             }
                                                             let isItemSelected = !!selectedItemIds && selectedItemIds[`${rowData?.SCENE_NAME}`] === rowData?.SMALL_CIRCLE_ID;
                                                             let hasSimilarAttribute = similarityBase?.ATTRIBUTES?.color !== undefined && (rowData?.ATTRIBUTES?.color === similarityBase?.ATTRIBUTES?.color);
+
+                                                            const diffMilliseconds = moment(exitTimestamp).diff(moment(enterTimestamp));
+                                                            const duration = moment.duration(diffMilliseconds);
+
+                                                            const result = [
+                                                                duration.hours() && `${duration.hours()}h`,
+                                                                duration.minutes() && `${duration.minutes()}m`,
+                                                                duration.seconds() && `${duration.seconds()}s`,
+                                                            ].filter(Boolean).join(' ') || '0s';
+
                                                             return (
                                                                 <TableCell
                                                                     key={tIndex}
@@ -228,14 +240,14 @@ export default function EditModal(props) {
                                                                     {rowData &&
                                                                         <>
                                                                             <div style={{ position: 'relative' }}>
-                                                                                <div className={`${!isItemSelected && hasSimilarAttribute ? 'similarity_indicator' : ''}`} />
+                                                                                {/* <div className={`${!isItemSelected && hasSimilarAttribute ? 'similarity_indicator' : ''}`} /> */}
                                                                                 <img
                                                                                     col={rowData?.ATTRIBUTES?.color || 'none'}
                                                                                     onClick={(props.isValidating || !rowData.IMAGE_URL || select_disabled) ? () => { } : () => {
                                                                                         return handleSelect(rowData?.SMALL_CIRCLE_ID, rowData.SCENE_NAME)
                                                                                     }}
                                                                                     alt={`${rowData.sceneName}_image`}
-                                                                                    s_id = {`${rowData.SMALL_CIRCLE_ID}`}
+                                                                                    s_id={`${rowData.SMALL_CIRCLE_ID}`}
                                                                                     className={`samdt_img ${(imageUrl) ? 'click_icon' : ''} ${isItemSelected ? 'glowing' : ''}`}
                                                                                     style={{ opacity: select_disabled ? '65%' : '100%' }}
                                                                                     src={imageUrl}
@@ -243,6 +255,7 @@ export default function EditModal(props) {
                                                                                 {rowData.IMAGE_URL &&
                                                                                     <VisibilityIcon
                                                                                         onClick={() => {
+                                                                                            console.log('rowData', rowData)
                                                                                             setOpenImagePreview(true);
                                                                                             setPreviewImage(imageUrl);
                                                                                             setPreviewBbox(rowData.BBOX);
@@ -253,19 +266,30 @@ export default function EditModal(props) {
                                                                                 }
 
                                                                                 {rowData && rowData.JOURNEY_ID === null &&
-                                                                                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                                                                                    <div style={{ position: 'absolute', top: 10, right: 35, color: 'white' }}>
                                                                                         <span style={{ fontSize: 12, fontFamily: 'Nunito' }}>
                                                                                             No Journey Id
                                                                                         </span>
                                                                                     </div>
                                                                                 }
+
+                                                                                <div style={{ position: 'absolute', top: 10, right: 10, color: 'white' }}>
+                                                                                    {hasSimilarAttribute ? <OutlinedFlagIcon style={{ height: 15 }} /> : ''}
+                                                                                </div>
                                                                             </div>
-                                                                            <div style={{ float: 'right', fontSize: 12 }}>
+                                                                            <div style={{ float: 'right', fontSize: 10, display: 'flex', flexDirection: 'row' }}>
                                                                                 {
-                                                                                    moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('YYYY/MM/DD - ')
+                                                                                    moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('YYYY/MM/DD')
                                                                                 }
-                                                                                <span>IN: {moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
+                                                                                <span style={{ marginLeft: 5 }}>IN: {moment(enterTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
                                                                                 <span style={{ marginLeft: 5 }}>OUT: {moment(exitTimestamp, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')}</span>
+                                                                                <img
+                                                                                    style={{ height: 14, marginLeft: 5 }}
+                                                                                    alt="samdt_image"
+                                                                                    src={IconTime}
+                                                                                />
+                                                                                <span style={{ marginLeft: 2 }}>{result}</span>
+
                                                                             </div>
                                                                         </>
                                                                     }

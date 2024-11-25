@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ImageMapper from 'react-img-mapper';
 
 const ImageMagnifier = ({ url, bbox, finalBbox }) => {
-    let fixedFinalBbox = !!finalBbox ? Object.values(finalBbox) : []
+    let fixedFinalBbox = !!finalBbox ? typeof finalBbox === 'string' ? Object.values(JSON.parse(finalBbox)) : Object.values(finalBbox) : []
     const [show, setShow] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
@@ -16,10 +16,10 @@ const ImageMagnifier = ({ url, bbox, finalBbox }) => {
                 shape: "rect",
                 strokeColor: "rgba(0, 230, 64, 1)",
                 coords: [
-                    fixedFinalBbox[0] * 960,
-                    fixedFinalBbox[1] * 550,
-                    fixedFinalBbox[2] * 960,
-                    fixedFinalBbox[3] * 550,
+                    fixedFinalBbox[0] * 920,
+                    fixedFinalBbox[1] * 520,
+                    fixedFinalBbox[2] * 920,
+                    fixedFinalBbox[3] * 520,
                 ],
                 preFillColor: "rgba(76, 175, 80, 0.1)",
                 lineWidth: 2,
@@ -30,10 +30,10 @@ const ImageMagnifier = ({ url, bbox, finalBbox }) => {
                 shape: "rect",
                 strokeColor: "red",
                 coords: [
-                    bbox[0] * 960,
-                    bbox[1] * 550,
-                    bbox[2] * 960,
-                    bbox[3] * 550,
+                    bbox[0] * 920,
+                    bbox[1] * 520,
+                    bbox[2] * 920,
+                    bbox[3] * 520,
                 ],
                 preFillColor: "rgba(76, 175, 80, 0.1)",
                 lineWidth: 2,
@@ -80,7 +80,7 @@ const ImageMagnifier = ({ url, bbox, finalBbox }) => {
             onMouseMove={handleMouseHover}
         >
             {/* <img className='magnifier-img' src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> */}
-            <ImageMapper width={970} height={550} src={url} map={bbox_map} />
+            <ImageMapper width={920} height={520} src={url} map={bbox_map} />
 
             {show &&
                 <div

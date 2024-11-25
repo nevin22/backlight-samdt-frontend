@@ -17,7 +17,9 @@ import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 
 import default_image from '../assets/no_image.jpg';
-import IconPublished from '../assets/icons/icon-published.svg'
+import IconPublished from '../assets/icons/icon-published.svg';
+import IconValidated from '../assets/icons/icon-check-with-circle.svg';
+import IconTime from '../assets/icons/icon-time-black.svg'
 import EditModal from './EditModal';
 import AlertDialog from "./AlertDialog";
 
@@ -64,8 +66,7 @@ export default function BasicTable(props) {
       })
       .catch(err => {
         setIsValidating(false);
-        alert('An error has occured while editing');
-        console.log("err", err);
+        alert(err.response.data.message || 'An error has occured while editing');
       })
   }
 
@@ -155,6 +156,17 @@ const CustomTableRow = (props) => {
   let rowComponents = [];
   for (let i = 0; i <= columnLength - 1; i++) {
     let item = rowItems.find(d => parseInt(d.ORDER_INDEX) === (columnLength - 1) - i);
+    let enter_ts = item && (item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP);
+    let exit_ts = item && (item.VALIDATED_EXIT_TIMESTAMP || item.EXIT_TIMESTAMP);
+    const diffMilliseconds = moment(exit_ts).diff(moment(enter_ts));
+    const duration = moment.duration(diffMilliseconds);
+
+    const result = [
+      duration.hours() && `${duration.hours()}h`,
+      duration.minutes() && `${duration.minutes()}m`,
+      duration.seconds() && `${duration.seconds()}s`,
+    ].filter(Boolean).join(' ') || '0s';
+
     if (item && !item.NO_DATA) {
       let image = item.VALIDATED_IMAGE_URL ? item.VALIDATED_IMAGE_URL : (item.IMAGE_URL || default_image);
       rowComponents.push(
@@ -176,9 +188,15 @@ const CustomTableRow = (props) => {
                 <span style={{ fontFamily: 'Nunito', marginRight: 10, color: '#ff7474' }}>BA</span>
               </React.Fragment>
             }
-            <span style={{ marginRight: 10 }}>{moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY -')}</span>
+            {/* <span style={{ marginRight: 5 }}>{moment(enter_ts, 'YYYY-MM-DD HH:mm:ss.SSS').format('MMM, DD YYYY')}</span> */}
             <span>IN: {moment((item.VALIDATED_ENTER_TIMESTAMP || item.ENTER_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A,')}</span>
-            <span style={{ marginLeft: 5 }}>OUT: {moment((item.VALIDATED_EXIT_TIMESTAMP || item.EXIT_TIMESTAMP), 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
+            <span style={{ marginLeft: 5 }}>OUT: {moment(exit_ts, 'YYYY-MM-DD HH:mm:ss.SSS').format('hh:mm:ss A')} </span>
+            <img
+              style={{ height: 16, marginLeft: 5 }}
+              alt="samdt_image"
+              src={IconTime}
+            />
+            <span style={{ marginLeft: 2 }}>{result}</span>
           </div>
         </StyledTableCell>
       )
@@ -200,7 +218,7 @@ const CustomTableRow = (props) => {
     <React.Fragment key={props.propKey}>
       <TableRow key={props.propKey}
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ backgroundColor: isValidated ? '#DAECFF' : '' }}
+        style={{ backgroundColor: isValidated ? '#B4D9FD' : '' }}
       >
         <TableCell
           colSpan={columnLength}
@@ -210,10 +228,10 @@ const CustomTableRow = (props) => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div className='flex items-center'>
               <span
-                style={{ cursor: forPublish ? '' : 'pointer' }}
+                style={{ cursor: isValidated ? '' : 'pointer' }}
                 className='mr-2'
                 onClick={() => {
-                  return !forPublish && props.openEditModal({
+                  return !isValidated && props.openEditModal({
                     ...props.row,
                     DATA: props.row.DATA.filter(d => !d.NO_DATA)
                   })
@@ -221,16 +239,20 @@ const CustomTableRow = (props) => {
                 {props.index + 1} Session {props.row.JOURNEY_ID}
               </span>
               {isValidated && !forPublish &&
-                <>
-                  <BeenhereIcon style={{ color: '#1976D2', fontSize: 12 }} className='ml-4' />
+                <div className='flex items-center ml-4'>
+                  <img
+                    style={{ height: 16 }}
+                    alt="samdt_image"
+                    src={IconValidated}
+                  />
                   <span
                     // onDoubleClick={() => props.setIdToInvalidate(props.row.JOURNEY_ID)}
-                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
+                    style={{ userSelect: 'none', fontFamily: 'Nunito', color: '#1976D2', fontSize: 14 }}
                     className='px-1'
                   >
                     VALIDATED
                   </span>
-                </>
+                </div>
               }
 
               {forPublish &&
@@ -247,7 +269,7 @@ const CustomTableRow = (props) => {
               {eventType === 'Warm Exit' && isValidated &&
                 <>
                   <span
-                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#4988CF', fontSize: 10, border: 'solid #4988CF 2px', borderRadius: 5 }}
+                    style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#4988CF', fontSize: 10, border: 'solid #4988CF 2px', borderRadius: 5, backgroundColor: '#E6F2FE' }}
                     className='ml-4 px-1'
                   >
                     Warm Exit
@@ -272,7 +294,7 @@ const CustomTableRow = (props) => {
                     style={{ cursor: forPublish ? '' : 'pointer', userSelect: 'none', fontFamily: 'Nunito', color: '#D83231', fontSize: 10, border: 'solid #D83231 2px', borderRadius: 5 }}
                     className='ml-4 px-1'
                   >
-                    BALK
+                    ABANDON
                   </span>
                 </>
               }
@@ -322,7 +344,7 @@ const CustomTableRow = (props) => {
 
       <StyledTableRow
         sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-        style={{ borderTop: 0, backgroundColor: isValidated ? '#DAECFF' : '' }}
+        style={{ borderTop: 0, backgroundColor: isValidated ? '#B4D9FD' : '' }}
       >
         {rowComponents}
       </StyledTableRow>
