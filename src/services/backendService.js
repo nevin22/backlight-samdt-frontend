@@ -21,12 +21,17 @@ const backendService = {
             throw error;
         }
     },
-    prepDataForSyncing: async (selectedDate) => {
+    prepDataForSyncing: async (selectedDate, site, network) => {
         const desiredFormat = 'YYYY-MM-DD HH:mm:ss.SSS';
         let payload = selectedDate ? {
             startTime: (selectedDate && moment(selectedDate).startOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
             endTime: (selectedDate && moment(selectedDate).endOf('day').format(desiredFormat)) || moment().subtract(1, 'days').startOf('day').format(desiredFormat),
-        } : {}
+            site,
+            network
+        } : {
+            site,
+            network
+        }
 
         try {
             const response = await axios.post(`${BASE_URL}/detections/sync_data_to_manifest`, {

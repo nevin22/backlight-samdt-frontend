@@ -59,7 +59,7 @@ function App(props) {
   }
 
   let syncToManifest = (syncAll) => {
-    backendService.prepDataForSyncing(syncAll ? null : selectedDate)
+    backendService.prepDataForSyncing(syncAll ? null : selectedDate, Cookies.get('site'), Cookies.get('network'))
       .then(res => {
         setOpenSnackBar(true);
         setSuccessSnackBar(true);
