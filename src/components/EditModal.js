@@ -333,7 +333,10 @@ export default function EditModal(props) {
                         <Button
                             variant="contained"
                             style={{ fontFamily: 'Nunito', opacity: props.isValidating ? '50%' : '100%', marginLeft: 15 }}
-                            onClick={props.isValidating ? () => { } : () => props.validate_data(selectedItemIds, eventType)}
+                            onClick={props.isValidating ? () => { } : () => {
+                                console.log('dddd', selectedItemIds, eventType)
+                                props.validate_data(selectedItemIds, eventType)
+                            }}
                         >
                             Apply
                         </Button>

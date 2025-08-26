@@ -122,6 +122,9 @@ export default function BasicTable(props) {
                   row={row}
                   index={index}
                   openEditModal={(data) => openEditModal(data)}
+                  validate_data={(ids, type, sdata) => {
+                    validate_data(ids, type, sdata);
+                  }}
                   setIdToInvalidate={(id) => {
                     setIdToInvalidate(id);
                     setOpenAlert(true)
@@ -172,7 +175,7 @@ const CustomTableRow = (props) => {
       rowComponents.push(
         <StyledTableCell
           key={i}
-          style={{ fontFamily: "Nunito", fontWeight: "bold" }}
+          style={{ fontFamily: "Nunito", fontWeight: "bold", position: 'relative' }}
           align="left"
           width={`${100 / columnLength}%`}
         >
@@ -180,7 +183,10 @@ const CustomTableRow = (props) => {
             alt="samdt_image"
             className="samdt_img"
             src={image}
-          />
+          /> 
+          <div style={{ position: 'absolute', zIndex: 50, right: 20, bottom: 35, fontSize: 12, color: 'white', opacity: 0.5 }}>
+            {item.SMALL_CIRCLE_ID}
+          </div>
           <div style={{ float: 'right', fontSize: 12, display: 'flex', placeContent: 'center' }}>
             {!!item.IS_BA &&
               <React.Fragment>
@@ -300,7 +306,7 @@ const CustomTableRow = (props) => {
               }
 
             </div>
-            {isValidated && !forPublish &&
+            {((isValidated && !forPublish) || columnLength === props.row.DATA.filter(d => !d.NO_DATA)?.length) &&
               <div>
                 <MoreHorizIcon onClick={handleClick} />
                 <Popover
@@ -318,26 +324,47 @@ const CustomTableRow = (props) => {
                   }}
                 >
                   <div className='py-1'>
-                    <div
-                      className='flex items-center pl-2'
-                      style={{ fontSize: 14, height: 30, width: 150, backgroundColor: '#D21716', color: 'white' }}
-                      onClick={() => {
-                        if (forPublish) {
-                          alert('Cannot invalidate for publish sessions.')
-                        } else {
-                          props.setIdToInvalidate(props.row.JOURNEY_ID);
-                        }
+                    {isValidated && !forPublish &&
+                      <div
+                        className='flex items-center pl-2'
+                        style={{ fontSize: 14, height: 30, width: 150, backgroundColor: '#D21716', color: 'white' }}
+                        onClick={() => {
+                          if (forPublish) {
+                            alert('Cannot invalidate for publish sessions.')
+                          } else {
+                            props.setIdToInvalidate(props.row.JOURNEY_ID);
+                          }
 
-                        handleClose()
-                      }}
-                    >
-                      Invalidate Session
-                    </div>
+                          handleClose()
+                        }}
+                      >
+                        Invalidate Session
+                      </div>
+                    }
+
+                    {!isValidated && columnLength === props.row.DATA.filter(d => !d.NO_DATA)?.length &&
+                      <div
+                        className='flex items-center pl-2'
+                        style={{ fontSize: 14, height: 30, width: 150, backgroundColor: 'green', color: 'white' }}
+                        onClick={() => {
+                          let setupSelected = {};
+                          let selectedData = {...props.row, DATA: props.row.DATA.filter(d => !d.NO_DATA)};
+                          for (let x = 0; x <= props.tableColumns.length - 1; x++) {
+                              setupSelected[`${props.tableColumns[x].sceneName}`] = rowItems.find(data => data && data.SCENE_NAME === props.tableColumns[x].sceneName)?.SMALL_CIRCLE_ID
+                          }
+                          props.validate_data(setupSelected, 'Warm Exit', selectedData)
+
+                          handleClose()
+                        }}
+                      >
+                        Validate Session
+                      </div>
+                    }
+
                   </div>
                 </Popover>
               </div>
             }
-
           </div>
         </TableCell>
       </TableRow>

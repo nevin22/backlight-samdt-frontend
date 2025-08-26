@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ImageMapper from 'react-img-mapper';
 
 const ImageMagnifier = ({ url, bbox, finalBbox }) => {
-    let fixedFinalBbox = !!finalBbox ? typeof finalBbox === 'string' ? Object.values(JSON.parse(finalBbox)) : Object.values(finalBbox) : []
+    let fixedFinalBbox = !!finalBbox ? typeof finalBbox === 'string' ? Object.values(JSON.parse(finalBbox)) : Object.values(finalBbox) : [];
+
     const [show, setShow] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
     const [imageSrc, setImageSrc] = useState('');
+    const [imgSize, setImgSize] = useState({ width: 920, height: 520 });
+
     const bbox_map = {
         name: 'my-map',
-        // GET JSON FROM BELOW URL AS AN EXAMPLE
         areas: [
             {
                 name: `1-`,
@@ -50,10 +52,10 @@ const ImageMagnifier = ({ url, bbox, finalBbox }) => {
         const x = (((e.pageX - scrollX) - left) / width) * 100;
         const y = (((e.pageY - scrollY) - top) / height) * 100;
         setPosition({ x, y });
-        setCursorPosition({ x: (e.pageX - scrollX) - (left * 0.35), y: (e.pageY - scrollY) - (top * 0.35) })
+        setCursorPosition({ x: (e.pageX - scrollX) - left, y: (e.pageY - scrollY) - top });
     }
 
-    useEffect(() => { // this will allow magnifier image to display properly regardless of the image content-type
+    useEffect(() => {
         const fetchImage = async () => {
             try {
                 const response = await fetch(url);
@@ -68,42 +70,43 @@ const ImageMagnifier = ({ url, bbox, finalBbox }) => {
         fetchImage();
     }, [url]);
 
+    const zoomLevel = 2; // Example: 2x magnification
+
     return (
         <div
-            // className='img-magnifier-container'
             onMouseEnter={() => {
-                setShow(true)
+                setShow(true);
             }}
             onMouseLeave={() => {
-                setShow(false)
+                setShow(false);
             }}
             onMouseMove={handleMouseHover}
+            style={{ position: 'relative' }}
         >
-            {/* <img className='magnifier-img' src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> */}
-            <ImageMapper width={920} height={520} src={url} map={bbox_map} />
+            <ImageMapper width={imgSize.width} height={imgSize.height} src={url} map={bbox_map} />
 
-            {show &&
+            {show && imgSize.width !== 0 && (
                 <div
                     style={{
                         position: 'absolute',
                         left: `${cursorPosition.x}px`,
                         top: `${cursorPosition.y}px`,
                         pointerEvents: 'none',
-                        zIndex: 1
+                        zIndex: 999999
                     }}
                 >
                     <div
-                        className='magnifier-image'
+                        className="magnifier-image"
                         style={{
                             backgroundImage: `url(${imageSrc})`,
-                            backgroundPosition: `${position.x}% ${position.y}% `
+                            backgroundSize: `${imgSize.width * zoomLevel}px ${imgSize.height * zoomLevel}px`,
+                            backgroundPosition: `${position.x}% ${position.y}%`,
                         }}
                     />
                 </div>
-            }
-
+            )}
         </div>
-    )
-}
+    );
+};
 
 export default ImageMagnifier;
